@@ -34,6 +34,18 @@ export const MCQQuiz = ({ topic, questions = [], difficulty = "medium" }: MCQQui
   const [showResultsState, setShowResults] = useTamboComponentState("showResults", false);
   const [showExplanation, setShowExplanation] = useState(false);
   
+  // Quiz summary state - visible to AI for context
+  const [, setQuizSummary] = useTamboComponentState<{
+    topic: string;
+    totalQuestions: number;
+    correctAnswers: number;
+    wrongAnswers: number;
+    percentage: number;
+    status: "in_progress" | "completed";
+    wrongQuestionIds: string[];
+    difficulty: string;
+  } | null>("quizSummary", null);
+  
   // Ensure we have valid default values
   const currentQuestion = currentQuestionState ?? 0;
   const selectedAnswers = selectedAnswersState ?? {};
@@ -103,6 +115,39 @@ export const MCQQuiz = ({ topic, questions = [], difficulty = "medium" }: MCQQui
       setCurrentQuestion(currentQuestion + 1);
       setShowExplanation(false);
     } else {
+      // Calculate final results and store for AI
+      let correct = 0;
+      const wrongIds: string[] = [];
+      questions.forEach((q) => {
+        if (selectedAnswers[q.id] === q.correctAnswer) {
+          correct++;
+        } else {
+          wrongIds.push(q.id);
+        }
+      });
+      
+      const quizResultData = {
+        topic,
+        totalQuestions,
+        correctAnswers: correct,
+        wrongAnswers: totalQuestions - correct,
+        percentage: Math.round((correct / totalQuestions) * 100),
+        status: "completed" as const,
+        wrongQuestionIds: wrongIds,
+        difficulty: difficulty || "medium",
+      };
+      
+      // Store quiz summary for AI context
+      setQuizSummary(quizResultData);
+      
+      // Dispatch custom event for InterviewContext to catch
+      if (typeof window !== "undefined") {
+        console.log("[MCQQuiz] Dispatching quiz-complete event:", quizResultData);
+        window.dispatchEvent(new CustomEvent("quiz-complete", { 
+          detail: quizResultData 
+        }));
+      }
+      
       setShowResults(true);
     }
   };

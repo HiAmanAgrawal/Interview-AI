@@ -202,15 +202,37 @@ const AnimatedBackground = () => (
       }}
     />
     
-    {[...Array(20)].map((_, i) => (
+    {/* Static particles with fixed positions to avoid hydration mismatch */}
+    {[
+      { left: 10, top: 20, delay: 0, duration: 9 },
+      { left: 25, top: 65, delay: 2, duration: 10 },
+      { left: 40, top: 30, delay: 4, duration: 8 },
+      { left: 55, top: 80, delay: 1, duration: 11 },
+      { left: 70, top: 45, delay: 3, duration: 9 },
+      { left: 85, top: 15, delay: 5, duration: 10 },
+      { left: 15, top: 75, delay: 6, duration: 8 },
+      { left: 30, top: 50, delay: 2, duration: 12 },
+      { left: 60, top: 25, delay: 4, duration: 9 },
+      { left: 80, top: 70, delay: 7, duration: 10 },
+      { left: 5, top: 40, delay: 1, duration: 11 },
+      { left: 45, top: 90, delay: 3, duration: 8 },
+      { left: 75, top: 35, delay: 5, duration: 9 },
+      { left: 90, top: 60, delay: 0, duration: 10 },
+      { left: 20, top: 85, delay: 6, duration: 11 },
+      { left: 50, top: 10, delay: 2, duration: 8 },
+      { left: 65, top: 55, delay: 4, duration: 12 },
+      { left: 35, top: 95, delay: 7, duration: 9 },
+      { left: 95, top: 5, delay: 1, duration: 10 },
+      { left: 8, top: 48, delay: 3, duration: 11 },
+    ].map((particle, i) => (
       <div
         key={i}
         className="absolute w-1 h-1 bg-white/30 rounded-full particle"
         style={{
-          left: `${Math.random() * 100}%`,
-          top: `${Math.random() * 100}%`,
-          animationDelay: `${Math.random() * 8}s`,
-          animationDuration: `${8 + Math.random() * 4}s`,
+          left: `${particle.left}%`,
+          top: `${particle.top}%`,
+          animationDelay: `${particle.delay}s`,
+          animationDuration: `${particle.duration}s`,
         }}
       />
     ))}
@@ -298,18 +320,36 @@ const HeroSection = ({ onStartClick }: { onStartClick: () => void }) => (
       </p>
       
       {/* CTA Buttons */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-slide-up" style={{ animationDelay: "300ms" }}>
-        <button 
-          onClick={onStartClick}
-          className="group px-8 py-4 bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 text-white rounded-2xl font-semibold text-lg animate-pulse-glow hover:scale-105 transition-all flex items-center gap-2"
+      <div className="flex flex-col items-center gap-4 mb-16 animate-slide-up" style={{ animationDelay: "300ms" }}>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a 
+            href="/practice"
+            className="group px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-2xl font-semibold text-lg hover:scale-105 transition-all flex items-center gap-2"
+          >
+            📚 Practice Mode
+            <span className="group-hover:translate-x-1 transition-transform">→</span>
+          </a>
+          <a 
+            href="/test"
+            className="group px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl font-semibold text-lg hover:scale-105 transition-all flex items-center gap-2"
+          >
+            📝 Take a Test
+            <span className="group-hover:translate-x-1 transition-transform">→</span>
+          </a>
+          <a 
+            href="/interview"
+            className="group px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl font-semibold text-lg animate-pulse-glow hover:scale-105 transition-all flex items-center gap-2"
+          >
+            🎯 Start Interview
+            <span className="group-hover:translate-x-1 transition-transform">→</span>
+          </a>
+        </div>
+        <a 
+          href="/chat"
+          className="px-6 py-3 glass text-white/70 rounded-xl font-medium hover:bg-white/10 hover:text-white transition-all flex items-center gap-2"
         >
-          Start Free Practice
-          <span className="group-hover:translate-x-1 transition-transform">→</span>
-        </button>
-        <button className="px-8 py-4 glass text-white rounded-2xl font-medium hover:bg-white/10 transition-all flex items-center gap-2">
-          <span>▶</span>
-          Watch Demo
-        </button>
+          💬 Free Chat with AI
+        </a>
       </div>
       
       {/* Stats */}

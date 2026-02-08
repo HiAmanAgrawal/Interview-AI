@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
+  // Fix for multiple lockfiles detection
+  outputFileTracingRoot: path.join(__dirname),
+  
   // Run ESLint separately via `npm run lint` (avoids deprecated next lint)
   eslint: {
     ignoreDuringBuilds: true,
