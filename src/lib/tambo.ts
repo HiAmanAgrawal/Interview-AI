@@ -927,23 +927,27 @@ export const components: TamboComponent[] = [
   // Theory Question Component
   {
     name: "TheoryQuestion",
-    description: `REQUIRED for ALL theory/explanation questions - including follow-ups and deep dives.
+    description: `MANDATORY for ALL theory/explanation/coding questions that need text answers.
 
-WHEN TO USE:
-- Any question asking user to explain, describe, or discuss a concept
-- Follow-up questions like "Can you elaborate on X?"
-- Deep dive questions like "Tell me more about Y"
-- Clarification questions like "What do you mean by Z?"
-- ANY question that expects a text/spoken answer (not MCQ)
+ABSOLUTE RULE: NEVER write a question as plain text. ALWAYS use this component!
+
+WHEN TO USE (ALWAYS use component, not plain text):
+- ANY question asking user to explain, describe, discuss, or write code
+- Follow-up questions - STILL use this component
+- Deep dive questions - STILL use this component  
+- SQL questions, coding questions without editor - use this component
+- ANY question expecting a text/spoken answer
 
 CRITICAL RULES:
-1. ONLY render this component - DO NOT write the question as text in your message
-2. The component shows the question with a timer - just pass question as prop
-3. User answers via CHAT below (not in component)
-4. After user responds, use rateTheoryAnswer tool to rate 1-5 with feedback
-5. Use sequential IDs: "theory-1", "theory-2", "theory-3" etc.
-6. Pass questionNumber and totalQuestions for progress tracking
-7. NEVER ask a theory question without using this component`,
+1. DO NOT write questions in your message text - ONLY render this component
+2. Pass the FULL question including code snippets in the "question" prop
+3. Use markdown: **bold**, \`inline code\`, \`\`\`code blocks\`\`\`
+4. User answers via CHAT (not in component)
+5. After user responds (or says "I don't know"), use rateTheoryAnswer tool
+6. If user says "skip" or "I don't know" - rate 0/5, then show NEXT question
+7. NEVER repeat the same question - always move forward
+8. Use sequential IDs: "theory-1", "theory-2", "theory-3" etc.
+9. Pass questionNumber and totalQuestions for progress tracking`,
     component: TheoryQuestion,
     propsSchema: theoryQuestionSchema,
   },

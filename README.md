@@ -4,9 +4,9 @@ An intelligent, AI-powered interview and practice platform built with Next.js, T
 
 ## Live Demo
 
-**Deployed Link**: [Coming Soon - Add your deployed URL here]
+**Deployed Link**: [https://interview-ai-steel.vercel.app]
 
-**Video Demo**: [Coming Soon - Add your demo video link here]
+**Video Demo**: [https://interview-ai-steel.vercel.app/demo]
 
 ## Screenshots
 
@@ -17,10 +17,10 @@ An intelligent, AI-powered interview and practice platform built with Next.js, T
 ### Landing Page
 ![Landing Page](screenshots/landing.png)
 
-### Practice Mode
+### Interview Mode
 ![Practice Mode](screenshots/practice.png)
 
-### Interview Mode
+### Theory Question
 ![Interview Mode](screenshots/interview.png)
 
 ### MCQ Quiz

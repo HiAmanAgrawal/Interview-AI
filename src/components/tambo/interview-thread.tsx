@@ -315,103 +315,106 @@ export const InterviewThread = React.forwardRef<
       case "practice":
         return `[SYSTEM] Start a practice session. User: ${userName}. Topics: ${topicList}. 
 
-EXACTLY 15 QUESTIONS REQUIRED. RANDOMIZE question types - DO NOT ask only theory questions!
+EXACTLY 15 QUESTIONS REQUIRED. YOU MUST COMPLETE ALL 15!
 
-Greet the user warmly, introduce yourself as their AI tutor.
-Mention they can type or use the microphone to answer.
+Greet the user warmly, mention they can type or use the microphone.
 
-REQUIRED QUESTION MIX (MUST follow this order pattern):
-1. TheoryQuestion (warm-up)
-2. MCQQuiz (5 MCQs in one quiz)
-3. TheoryQuestion
-4. CodeEditor (coding problem)
-5. TheoryQuestion
-6. MCQQuiz (5 more MCQs)
-7. TheoryQuestion
-8. Whiteboard or MatchFollowing (if applicable)
-9. TheoryQuestion
-10. CodeEditor (final coding)
-11-15. Mix of remaining types
+MANDATORY QUESTION SEQUENCE (FOLLOW EXACTLY):
+Q1: MCQQuiz (5 MCQs)
+Q2: TheoryQuestion 
+Q3: CodeEditor (coding problem)
+Q4: TheoryQuestion
+Q5: MCQQuiz (5 MCQs on different topic)
+Q6: MatchFollowing (concept matching)
+Q7: TheoryQuestion
+Q8: CodeEditor (coding problem)
+Q9: TheoryQuestion
+Q10: MCQQuiz (5 MCQs)
+Q11: Whiteboard (if system design topic, else CodeEditor)
+Q12: TheoryQuestion
+Q13: CodeEditor (final coding)
+Q14: TheoryQuestion
+Q15: ScoreCard (show final results)
 
-CRITICAL - RANDOMIZE TYPES:
-- After 2 theory questions in a row, MUST switch to MCQ or Coding
-- Use MCQQuiz component for multiple choice (shows 5 questions at once)
-- Use CodeEditor for coding challenges
-- Use Whiteboard for system design
-- Use MatchFollowing for concept matching
-
-RULES:
-1. Track: "Question X of 15"
-2. After each answer, brief feedback then NEXT question immediately
-3. Cover ALL topics evenly
-4. At the end, show ScoreCard with full summary`;
+ABSOLUTE RULES - MUST FOLLOW:
+1. EVERY question MUST use a component (MCQQuiz, TheoryQuestion, CodeEditor, Whiteboard, MatchFollowing)
+2. NEVER write questions as plain text - ALWAYS render TheoryQuestion component for theory questions
+3. If user says "I don't know" or "skip" - provide the answer briefly, then show NEXT question immediately
+4. NEVER repeat the same question - always move forward
+5. Track: "Question X of 15"
+6. After rating a theory answer, IMMEDIATELY show next question component
+7. MCQQuiz counts as ONE question (contains 5 MCQs inside)
+8. You MUST reach Q15 (ScoreCard) - don't stop early!
+9. Give hints in practice mode when user struggles`;
       
       case "test":
         return `[SYSTEM] Start a test session. User: ${userName}. Topics: ${topicList}.
 
-EXACTLY 15 QUESTIONS REQUIRED. RANDOMIZE question types - NOT just theory!
+EXACTLY 15 QUESTIONS REQUIRED. YOU MUST COMPLETE ALL 15!
 
-Greet briefly as examiner. No hints allowed. Start immediately after greeting.
+Greet briefly as examiner. No hints allowed. Start immediately.
 
-REQUIRED TEST STRUCTURE:
-1. MCQQuiz (5 questions)
-2. TheoryQuestion
-3. TheoryQuestion  
-4. CodeEditor (coding problem)
-5. MCQQuiz (5 questions)
-6. TheoryQuestion
-7. Whiteboard or MatchFollowing
-8. TheoryQuestion
-9. CodeEditor (coding problem)
-10-15. Mix of remaining types
+MANDATORY QUESTION SEQUENCE (FOLLOW EXACTLY):
+Q1: MCQQuiz (5 MCQs)
+Q2: TheoryQuestion 
+Q3: TheoryQuestion
+Q4: CodeEditor (coding problem)
+Q5: MCQQuiz (5 MCQs)
+Q6: TheoryQuestion
+Q7: MatchFollowing (concept matching)
+Q8: TheoryQuestion
+Q9: CodeEditor (coding problem)
+Q10: MCQQuiz (5 MCQs)
+Q11: TheoryQuestion
+Q12: Whiteboard (if system design, else CodeEditor)
+Q13: TheoryQuestion
+Q14: CodeEditor (final coding)
+Q15: ScoreCard (show final results)
 
-CRITICAL - RANDOMIZE:
-- Start with MCQs to warm up
-- Alternate between MCQ, Theory, Coding, Matching
-- NEVER ask more than 2 theory questions in a row
-- Use all component types available
-
-RULES:
-1. Track: "Question X of 15" 
-2. No hints, no explanations during test
-3. After each answer, acknowledge briefly → NEXT question
-4. Cover ALL topics evenly
-5. At the end, show ScoreCard with complete summary`;
+ABSOLUTE RULES - MUST FOLLOW:
+1. EVERY question MUST use a component (MCQQuiz, TheoryQuestion, CodeEditor, Whiteboard, MatchFollowing)
+2. NEVER write questions as plain text - ALWAYS render TheoryQuestion component
+3. If user says "I don't know" or "skip" - rate 0, move to NEXT question immediately
+4. NEVER repeat the same question - always move forward
+5. Track: "Question X of 15"
+6. No hints, no explanations during test
+7. After each answer, acknowledge briefly → show NEXT question component
+8. MCQQuiz counts as ONE question (contains 5 MCQs inside)
+9. You MUST reach Q15 (ScoreCard) - don't stop early!`;
       
       case "interview":
         return `[SYSTEM] Start a technical interview. User: ${userName}. Topics: ${topicList}.
 
-EXACTLY 15 QUESTIONS in structured rounds. RANDOMIZE types - use ALL components!
+EXACTLY 15 QUESTIONS in structured rounds. YOU MUST COMPLETE ALL 15!
 
-Greet professionally. Ask for brief introduction, then begin.
+Greet professionally. Ask for brief introduction, then begin immediately.
 
-INTERVIEW ROUNDS:
-- Round 1 (Q1-Q3): Warm-up 
-  * Q1: TheoryQuestion (easy)
-  * Q2: MCQQuiz (5 MCQs)
-  * Q3: TheoryQuestion
+MANDATORY QUESTION SEQUENCE (FOLLOW EXACTLY):
+Q1: MCQQuiz (5 MCQs on ${topics[0] || topicList})
+Q2: TheoryQuestion 
+Q3: CodeEditor (coding problem)
+Q4: TheoryQuestion
+Q5: MCQQuiz (5 MCQs on different topic)
+Q6: MatchFollowing (concept matching)
+Q7: TheoryQuestion
+Q8: CodeEditor (coding problem)
+Q9: TheoryQuestion
+Q10: MCQQuiz (5 MCQs)
+Q11: Whiteboard (system design if applicable)
+Q12: TheoryQuestion
+Q13: CodeEditor (final coding)
+Q14: TheoryQuestion
+Q15: ScoreCard (show final results)
 
-- Round 2 (Q4-Q7): Core Assessment
-  * Q4: CodeEditor (coding problem)
-  * Q5: TheoryQuestion (medium)
-  * Q6: MatchFollowing (concept matching)
-  * Q7: TheoryQuestion
-
-- Round 3 (Q8-Q11): Deep Dive
-  * Q8: MCQQuiz (5 MCQs)
-  * Q9: Whiteboard (system design)
-  * Q10: TheoryQuestion (hard)
-  * Q11: CodeEditor
-
-- Round 4 (Q12-Q15): Final Challenge
-  * Q12-15: Mix of all types, harder difficulty
-
-CRITICAL RULES:
-1. Use ALL component types: MCQQuiz, TheoryQuestion, CodeEditor, Whiteboard, MatchFollowing
-2. NEVER more than 2 theory questions consecutively
-3. Track: "Question X of 15 (Round Y)"
-4. Rate theory answers 1-5 using rateTheoryAnswer tool
-5. Cover ALL topics evenly
+ABSOLUTE RULES - MUST FOLLOW:
+1. EVERY question MUST use a component (MCQQuiz, TheoryQuestion, CodeEditor, Whiteboard, MatchFollowing)
+2. NEVER write questions as plain text - ALWAYS render TheoryQuestion component
+3. If user says "I don't know" or "skip" - rate 0/5, say "Let's move on" and show NEXT question immediately
+4. NEVER repeat the same question - always move forward
+5. Track: "Question X of 15"
+6. After rating a theory answer, IMMEDIATELY show next question component
+7. MCQQuiz counts as ONE question (contains 5 MCQs inside)
+8. You MUST reach Q15 (ScoreCard) - don't stop early!
 6. At the end, show ScoreCard with detailed feedback`;
       
       default:

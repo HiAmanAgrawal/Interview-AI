@@ -1,8 +1,8 @@
 "use client";
 
+import React, { useState, useEffect, useCallback } from "react";
 import { useTamboComponentState } from "@tambo-ai/react";
 import { z } from "zod";
-import { useState, useEffect, useCallback } from "react";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SCHEMA
@@ -26,6 +26,9 @@ export type TheoryQuestionProps = z.infer<typeof theoryQuestionSchema>;
 // ═══════════════════════════════════════════════════════════════════════════
 
 const renderMarkdownText = (text: string) => {
+  // Guard against undefined/null text
+  if (!text) return null;
+  
   // Split by code blocks first (triple backticks)
   const parts = text.split(/(```[\s\S]*?```)/g);
   
@@ -47,25 +50,61 @@ const renderMarkdownText = (text: string) => {
       );
     }
     
-    // Handle inline code (single backticks)
-    const inlineParts = part.split(/(`[^`]+`)/g);
-    return (
-      <span key={index}>
-        {inlineParts.map((inlinePart, inlineIndex) => {
-          if (inlinePart.startsWith("`") && inlinePart.endsWith("`")) {
-            return (
-              <code 
-                key={inlineIndex} 
-                className="px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded font-mono text-sm"
-              >
-                {inlinePart.slice(1, -1)}
-              </code>
-            );
-          }
-          return <span key={inlineIndex}>{inlinePart}</span>;
-        })}
-      </span>
-    );
+    // Process inline formatting: bold, italic, inline code
+    const processInlineFormatting = (text: string, baseKey: string): React.ReactNode[] => {
+      const result: React.ReactNode[] = [];
+      // Regex to match **bold**, *italic*, `code`
+      const regex = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g;
+      let lastIndex = 0;
+      let match;
+      let matchIndex = 0;
+      
+      while ((match = regex.exec(text)) !== null) {
+        // Add text before the match
+        if (match.index > lastIndex) {
+          result.push(<span key={`${baseKey}-text-${matchIndex}`}>{text.slice(lastIndex, match.index)}</span>);
+        }
+        
+        const matched = match[0];
+        if (matched.startsWith("**") && matched.endsWith("**")) {
+          // Bold text
+          result.push(
+            <strong key={`${baseKey}-bold-${matchIndex}`} className="font-bold text-white">
+              {matched.slice(2, -2)}
+            </strong>
+          );
+        } else if (matched.startsWith("*") && matched.endsWith("*")) {
+          // Italic text
+          result.push(
+            <em key={`${baseKey}-italic-${matchIndex}`} className="italic text-white/90">
+              {matched.slice(1, -1)}
+            </em>
+          );
+        } else if (matched.startsWith("`") && matched.endsWith("`")) {
+          // Inline code
+          result.push(
+            <code 
+              key={`${baseKey}-code-${matchIndex}`}
+              className="px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded font-mono text-sm"
+            >
+              {matched.slice(1, -1)}
+            </code>
+          );
+        }
+        
+        lastIndex = regex.lastIndex;
+        matchIndex++;
+      }
+      
+      // Add remaining text
+      if (lastIndex < text.length) {
+        result.push(<span key={`${baseKey}-text-end`}>{text.slice(lastIndex)}</span>);
+      }
+      
+      return result.length > 0 ? result : [<span key={`${baseKey}-plain`}>{text}</span>];
+    };
+    
+    return <span key={index}>{processInlineFormatting(part, `part-${index}`)}</span>;
   });
 };
 
@@ -74,34 +113,39 @@ const renderMarkdownText = (text: string) => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 export const TheoryQuestion = ({
-  id,
-  topic,
-  question,
+  id = "",
+  topic = "",
+  question = "",
   questionNumber,
   totalQuestions,
   difficulty = "medium",
   hint,
   timeLimit = 180,
 }: TheoryQuestionProps) => {
+  // All hooks must be called unconditionally at the top
   const [showHint, setShowHint] = useState(false);
   const [timeSpent, setTimeSpent] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(true);
   
-  // State visible to AI
+  // State visible to AI - use stable keys even if id is empty
+  const stableId = id || "loading";
   const [status, setStatus] = useTamboComponentState<"waiting" | "answered" | "rated">(
-    `theory-${id}-status`,
+    `theory-${stableId}-status`,
     "waiting"
   );
   const [rating, setRating] = useTamboComponentState<number>(
-    `theory-${id}-rating`,
+    `theory-${stableId}-rating`,
     0
   );
   const [feedback, setFeedback] = useTamboComponentState<string>(
-    `theory-${id}-feedback`,
+    `theory-${stableId}-feedback`,
     ""
   );
 
-  // Timer effect with auto-timeout event
+  // Track if timeout has been triggered
+  const [hasTimedOut, setHasTimedOut] = useState(false);
+
+  // Timer effect - only counts time
   useEffect(() => {
     if (!isTimerRunning || status !== "waiting") return;
     
@@ -109,12 +153,7 @@ export const TheoryQuestion = ({
       setTimeSpent((prev) => {
         if (prev >= timeLimit) {
           setIsTimerRunning(false);
-          // Dispatch timeout event
-          if (typeof window !== "undefined") {
-            window.dispatchEvent(new CustomEvent("theory-question-timeout", {
-              detail: { id, topic, question, timeLimit }
-            }));
-          }
+          setHasTimedOut(true);
           return prev;
         }
         return prev + 1;
@@ -122,7 +161,20 @@ export const TheoryQuestion = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isTimerRunning, status, timeLimit, id, topic, question]);
+  }, [isTimerRunning, status, timeLimit]);
+
+  // Separate effect to dispatch timeout event (avoids setState during render)
+  useEffect(() => {
+    if (hasTimedOut && id && topic) {
+      // Use setTimeout to ensure this happens after render
+      const timer = setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("theory-question-timeout", {
+          detail: { id, topic, question, timeLimit }
+        }));
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [hasTimedOut, id, topic, question, timeLimit]);
 
   // Listen for answer submission from chat
   useEffect(() => {
@@ -175,10 +227,29 @@ export const TheoryQuestion = ({
     },
   };
 
-  const config = difficultyConfig[difficulty];
+  // Use fallback to medium if difficulty is invalid
+  const config = difficultyConfig[difficulty] || difficultyConfig.medium;
   const timeRemaining = Math.max(0, timeLimit - timeSpent);
   const isTimeWarning = timeRemaining < 30;
   const isTimeUp = timeRemaining <= 0;
+
+  // Guard against missing required props - AFTER all hooks
+  if (!id || !topic) {
+    return (
+      <div className="w-full my-4">
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl border border-white/10 p-8 text-center">
+          <div className="text-4xl mb-4">💭</div>
+          <h2 className="text-xl font-semibold text-white mb-2">Loading Question...</h2>
+          <p className="text-white/50">Preparing your theory question</p>
+          <div className="mt-6 flex justify-center gap-2">
+            <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
+            <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse" style={{ animationDelay: "0.2s" }} />
+            <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse" style={{ animationDelay: "0.4s" }} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full my-4">
@@ -219,7 +290,7 @@ export const TheoryQuestion = ({
         {/* Question - Wide and Prominent with Markdown Support */}
         <div className="px-6 py-6">
           <div className="text-white text-lg leading-relaxed font-medium">
-            {renderMarkdownText(question)}
+            {renderMarkdownText(question || "Loading question...")}
           </div>
           
           {/* Hint */}
