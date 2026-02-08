@@ -1,8 +1,8 @@
 "use client";
 
+import React, { useState, useCallback } from "react";
 import { useTamboComponentState } from "@tambo-ai/react";
 import { z } from "zod";
-import { useState, useCallback } from "react";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SCHEMA
@@ -10,9 +10,9 @@ import { useState, useCallback } from "react";
 
 export const codeEditorSchema = z.object({
   title: z.string().describe("Title of the coding challenge"),
-  question: z.string().describe("The problem description"),
+  question: z.string().describe("The problem description - supports markdown: **bold**, *italic*, `inline code`, ```code blocks```"),
   starterCode: z.string().describe("Initial code template"),
-  language: z.enum(["javascript", "python", "typescript"]).describe("Programming language"),
+  language: z.enum(["javascript", "python", "typescript", "sql"]).describe("Programming language"),
   testCases: z.array(
     z.object({
       input: z.string().describe("Test input"),
@@ -24,6 +24,86 @@ export const codeEditorSchema = z.object({
   timeLimit: z.number().optional().describe("Time limit in minutes"),
   difficulty: z.enum(["easy", "medium", "hard"]).optional().describe("Difficulty level"),
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MARKDOWN RENDERER
+// ═══════════════════════════════════════════════════════════════════════════
+
+const renderMarkdown = (text: string) => {
+  if (!text) return null;
+  
+  // Split by code blocks first (triple backticks)
+  const parts = text.split(/(```[\s\S]*?```)/g);
+  
+  return parts.map((part, index) => {
+    // Handle code blocks
+    if (part.startsWith("```") && part.endsWith("```")) {
+      const codeContent = part.slice(3, -3);
+      const firstNewLine = codeContent.indexOf("\n");
+      const language = firstNewLine > 0 ? codeContent.slice(0, firstNewLine).trim() : "";
+      const code = firstNewLine > 0 ? codeContent.slice(firstNewLine + 1) : codeContent;
+      
+      return (
+        <pre key={index} className="my-3 p-4 bg-black/40 rounded-xl overflow-x-auto border border-white/10">
+          {language && (
+            <div className="text-xs text-purple-400 mb-2 font-mono">{language}</div>
+          )}
+          <code className="text-sm font-mono text-green-400 whitespace-pre">{code}</code>
+        </pre>
+      );
+    }
+    
+    // Process inline formatting: bold, italic, inline code
+    const processInlineFormatting = (text: string, baseKey: string): React.ReactNode[] => {
+      const result: React.ReactNode[] = [];
+      const regex = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g;
+      let lastIndex = 0;
+      let match;
+      let matchIndex = 0;
+      
+      while ((match = regex.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+          result.push(<span key={`${baseKey}-text-${matchIndex}`}>{text.slice(lastIndex, match.index)}</span>);
+        }
+        
+        const matched = match[0];
+        if (matched.startsWith("**") && matched.endsWith("**")) {
+          result.push(
+            <strong key={`${baseKey}-bold-${matchIndex}`} className="font-bold text-white">
+              {matched.slice(2, -2)}
+            </strong>
+          );
+        } else if (matched.startsWith("*") && matched.endsWith("*")) {
+          result.push(
+            <em key={`${baseKey}-italic-${matchIndex}`} className="italic text-white/90">
+              {matched.slice(1, -1)}
+            </em>
+          );
+        } else if (matched.startsWith("`") && matched.endsWith("`")) {
+          result.push(
+            <code 
+              key={`${baseKey}-code-${matchIndex}`}
+              className="px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded font-mono text-sm"
+            >
+              {matched.slice(1, -1)}
+            </code>
+          );
+        }
+        
+        lastIndex = regex.lastIndex;
+        matchIndex++;
+      }
+      
+      if (lastIndex < text.length) {
+        result.push(<span key={`${baseKey}-text-end`}>{text.slice(lastIndex)}</span>);
+      }
+      
+      return result.length > 0 ? result : [<span key={`${baseKey}-plain`}>{text}</span>];
+    };
+    
+    return <span key={index}>{processInlineFormatting(part, `part-${index}`)}</span>;
+  });
+};
 
 export type CodeEditorProps = z.infer<typeof codeEditorSchema>;
 
@@ -66,10 +146,11 @@ export const CodeEditor = ({
     hard: "bg-red-500/20 text-red-400 border-red-500/30",
   };
 
-  const languageIcons = {
+  const languageIcons: Record<string, string> = {
     javascript: "📜",
     python: "🐍",
     typescript: "💙",
+    sql: "🗃️",
   };
 
   const runCode = useCallback(async () => {
@@ -80,10 +161,13 @@ export const CodeEditor = ({
 
     try {
       // Simulate code execution
-      await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 1000));
+      await new Promise((resolve) => setTimeout(resolve, 800 + Math.random() * 500));
       
-      // For JavaScript, we can actually try to run it
-      if (language === "javascript" || language === "typescript") {
+      // For SQL, don't use eval - just simulate
+      if (language === "sql") {
+        setOutput("✓ SQL syntax appears valid\n\n[Note: SQL execution requires a database connection. Submit for AI review to get feedback on your query logic.]");
+        setTestResults([]);
+      } else if (language === "javascript" || language === "typescript") {
         try {
           // Create a safe execution context
           const logs: string[] = [];
@@ -100,7 +184,7 @@ export const CodeEditor = ({
           const fn = eval(wrappedCode);
           fn(mockConsole);
           
-          setOutput(logs.length > 0 ? logs.join("\n") : "Code executed successfully (no output)");
+          setOutput(logs.length > 0 ? logs.join("\n") : "✓ Code executed successfully (no output)");
           
           // Run test cases
           if (testCases && testCases.length > 0) {
@@ -143,19 +227,27 @@ export const CodeEditor = ({
     // Store the submitted code in Tambo state (visible to AI)
     setSubmittedCode(code);
     setSubmitStatus("submitted");
-    setFeedback(`Your ${language} solution for "${title}" has been submitted for review.
+    setFeedback(`Your ${language} solution for "${title}" has been submitted for AI review.
 
-To get AI feedback, type in the chat: "Please review my submitted code"
-
-**Your Submission:**
-\`\`\`${language}
-${code}
-\`\`\``);
+The AI will analyze your code and provide feedback shortly...`);
     
     // Simulate processing delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    
+    // Dispatch event for InterviewThread to send the code to AI for review
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("code-submitted", {
+        detail: {
+          title,
+          language,
+          code,
+          question,
+        }
+      }));
+    }
+    
     setIsSubmitting(false);
-  }, [code, language, title, setSubmittedCode, setSubmitStatus, setFeedback]);
+  }, [code, language, title, question, setSubmittedCode, setSubmitStatus, setFeedback]);
 
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -199,7 +291,7 @@ ${code}
 
         {/* Problem Description */}
         <div className="p-4 bg-white/5 border-b border-white/10">
-          <p className="text-white/80 leading-relaxed">{question}</p>
+          <div className="text-white/80 leading-relaxed">{renderMarkdown(question)}</div>
         </div>
 
         {/* Hints */}

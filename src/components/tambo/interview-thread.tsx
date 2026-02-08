@@ -244,7 +244,7 @@ export const InterviewThread = React.forwardRef<
     setTimeout(() => submit(), 100);
   }, [setValue, submit]);
 
-  // Listen for question timeout events
+  // Listen for various events
   useEffect(() => {
     const handleTimeout = (event: CustomEvent) => {
       console.log("[InterviewThread] Question timeout:", event.detail);
@@ -263,12 +263,38 @@ export const InterviewThread = React.forwardRef<
       setTimeout(() => submit(), 100);
     };
 
+    // Handle MCQ quiz completion - auto-continue to next question
+    const handleMCQContinue = (event: CustomEvent) => {
+      console.log("[InterviewThread] MCQ continue:", event.detail);
+      const { topic, score, totalQuestions, percentage } = event.detail;
+      setValue(`[SYSTEM] User completed MCQ quiz on "${topic}". Score: ${score}/${totalQuestions} (${percentage}%). Acknowledge their performance briefly and IMMEDIATELY show the next question component (check getAIRules for sequence).`);
+      setTimeout(() => submit(), 100);
+    };
+
+    // Handle code submission - review the code
+    const handleCodeSubmitted = (event: CustomEvent) => {
+      console.log("[InterviewThread] Code submitted:", event.detail);
+      const { title, language, code } = event.detail;
+      setValue(`[SYSTEM] User submitted code for "${title}" (${language}). Review their solution:
+
+\`\`\`${language}
+${code}
+\`\`\`
+
+Provide brief feedback (2-3 sentences max) on correctness and approach. Then IMMEDIATELY show the next question component.`);
+      setTimeout(() => submit(), 100);
+    };
+
     window.addEventListener("theory-question-timeout", handleTimeout as EventListener);
     window.addEventListener("fullscreen-exit-detected", handleFullscreenExit as EventListener);
+    window.addEventListener("mcq-continue", handleMCQContinue as EventListener);
+    window.addEventListener("code-submitted", handleCodeSubmitted as EventListener);
 
     return () => {
       window.removeEventListener("theory-question-timeout", handleTimeout as EventListener);
       window.removeEventListener("fullscreen-exit-detected", handleFullscreenExit as EventListener);
+      window.removeEventListener("mcq-continue", handleMCQContinue as EventListener);
+      window.removeEventListener("code-submitted", handleCodeSubmitted as EventListener);
     };
   }, [setValue, submit]);
 
@@ -311,114 +337,43 @@ export const InterviewThread = React.forwardRef<
     const { mode, userName, topics } = cfg;
     const topicList = topics.join(", ");
     
+    // Simple greeting triggers - main rules are in contextHelpers.getAIRules()
     switch (mode) {
       case "practice":
-        return `[SYSTEM] Start a practice session. User: ${userName}. Topics: ${topicList}. 
+        return `[START] Practice session for ${userName} on ${topicList}.
 
-EXACTLY 15 QUESTIONS REQUIRED. YOU MUST COMPLETE ALL 15!
+Your greeting should:
+1. Say hi to ${userName} warmly
+2. Mention: "You can type your answers OR click the microphone button to dictate them"
+3. Then immediately show Q1: MCQQuiz component with 5 multiple choice questions
 
-Greet the user warmly, mention they can type or use the microphone.
-
-MANDATORY QUESTION SEQUENCE (FOLLOW EXACTLY):
-Q1: MCQQuiz (5 MCQs)
-Q2: TheoryQuestion 
-Q3: CodeEditor (coding problem)
-Q4: TheoryQuestion
-Q5: MCQQuiz (5 MCQs on different topic)
-Q6: MatchFollowing (concept matching)
-Q7: TheoryQuestion
-Q8: CodeEditor (coding problem)
-Q9: TheoryQuestion
-Q10: MCQQuiz (5 MCQs)
-Q11: Whiteboard (if system design topic, else CodeEditor)
-Q12: TheoryQuestion
-Q13: CodeEditor (final coding)
-Q14: TheoryQuestion
-Q15: ScoreCard (show final results)
-
-ABSOLUTE RULES - MUST FOLLOW:
-1. EVERY question MUST use a component (MCQQuiz, TheoryQuestion, CodeEditor, Whiteboard, MatchFollowing)
-2. NEVER write questions as plain text - ALWAYS render TheoryQuestion component for theory questions
-3. If user says "I don't know" or "skip" - provide the answer briefly, then show NEXT question immediately
-4. NEVER repeat the same question - always move forward
-5. Track: "Question X of 15"
-6. After rating a theory answer, IMMEDIATELY show next question component
-7. MCQQuiz counts as ONE question (contains 5 MCQs inside)
-8. You MUST reach Q15 (ScoreCard) - don't stop early!
-9. Give hints in practice mode when user struggles`;
+FORMATTING: Never use ### or ## headers. Keep it conversational.
+RULES: Check getAIRules() context for full question sequence. Complete all 15 questions.`;
       
       case "test":
-        return `[SYSTEM] Start a test session. User: ${userName}. Topics: ${topicList}.
+        return `[START] Test session for ${userName} on ${topicList}.
 
-EXACTLY 15 QUESTIONS REQUIRED. YOU MUST COMPLETE ALL 15!
+Your greeting should:
+1. Welcome ${userName} as their examiner
+2. Mention: "You can type or use the microphone button to answer"
+3. Then immediately show Q1: MCQQuiz component with 5 MCQs
 
-Greet briefly as examiner. No hints allowed. Start immediately.
-
-MANDATORY QUESTION SEQUENCE (FOLLOW EXACTLY):
-Q1: MCQQuiz (5 MCQs)
-Q2: TheoryQuestion 
-Q3: TheoryQuestion
-Q4: CodeEditor (coding problem)
-Q5: MCQQuiz (5 MCQs)
-Q6: TheoryQuestion
-Q7: MatchFollowing (concept matching)
-Q8: TheoryQuestion
-Q9: CodeEditor (coding problem)
-Q10: MCQQuiz (5 MCQs)
-Q11: TheoryQuestion
-Q12: Whiteboard (if system design, else CodeEditor)
-Q13: TheoryQuestion
-Q14: CodeEditor (final coding)
-Q15: ScoreCard (show final results)
-
-ABSOLUTE RULES - MUST FOLLOW:
-1. EVERY question MUST use a component (MCQQuiz, TheoryQuestion, CodeEditor, Whiteboard, MatchFollowing)
-2. NEVER write questions as plain text - ALWAYS render TheoryQuestion component
-3. If user says "I don't know" or "skip" - rate 0, move to NEXT question immediately
-4. NEVER repeat the same question - always move forward
-5. Track: "Question X of 15"
-6. No hints, no explanations during test
-7. After each answer, acknowledge briefly → show NEXT question component
-8. MCQQuiz counts as ONE question (contains 5 MCQs inside)
-9. You MUST reach Q15 (ScoreCard) - don't stop early!`;
+FORMATTING: Never use ### or ## headers. Be brief and formal.
+RULES: No hints. Check getAIRules() for question sequence. Complete all 15 questions.`;
       
       case "interview":
-        return `[SYSTEM] Start a technical interview. User: ${userName}. Topics: ${topicList}.
+        return `[START] Technical interview for ${userName} on ${topicList}.
 
-EXACTLY 15 QUESTIONS in structured rounds. YOU MUST COMPLETE ALL 15!
+Your greeting should:
+1. Greet ${userName} professionally as their interviewer
+2. Mention: "You can type or click the microphone button to answer"
+3. Ask for a brief introduction, then start Q1: MCQQuiz
 
-Greet professionally. Ask for brief introduction, then begin immediately.
-
-MANDATORY QUESTION SEQUENCE (FOLLOW EXACTLY):
-Q1: MCQQuiz (5 MCQs on ${topics[0] || topicList})
-Q2: TheoryQuestion 
-Q3: CodeEditor (coding problem)
-Q4: TheoryQuestion
-Q5: MCQQuiz (5 MCQs on different topic)
-Q6: MatchFollowing (concept matching)
-Q7: TheoryQuestion
-Q8: CodeEditor (coding problem)
-Q9: TheoryQuestion
-Q10: MCQQuiz (5 MCQs)
-Q11: Whiteboard (system design if applicable)
-Q12: TheoryQuestion
-Q13: CodeEditor (final coding)
-Q14: TheoryQuestion
-Q15: ScoreCard (show final results)
-
-ABSOLUTE RULES - MUST FOLLOW:
-1. EVERY question MUST use a component (MCQQuiz, TheoryQuestion, CodeEditor, Whiteboard, MatchFollowing)
-2. NEVER write questions as plain text - ALWAYS render TheoryQuestion component
-3. If user says "I don't know" or "skip" - rate 0/5, say "Let's move on" and show NEXT question immediately
-4. NEVER repeat the same question - always move forward
-5. Track: "Question X of 15"
-6. After rating a theory answer, IMMEDIATELY show next question component
-7. MCQQuiz counts as ONE question (contains 5 MCQs inside)
-8. You MUST reach Q15 (ScoreCard) - don't stop early!
-6. At the end, show ScoreCard with detailed feedback`;
+FORMATTING: Never use ### or ## headers. Be professional.
+RULES: Check getAIRules() for question sequence. Complete all 15 questions.`;
       
       default:
-        return `Hello ${userName}! Let's begin.`;
+        return `Hello ${userName}! Let's begin. You can type or use the microphone to answer.`;
     }
   };
 

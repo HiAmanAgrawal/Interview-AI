@@ -174,6 +174,19 @@ export const MCQQuiz = ({ topic, questions = [], difficulty = "medium" }: MCQQui
         window.dispatchEvent(new CustomEvent("quiz-complete", { 
           detail: quizResultData 
         }));
+        
+        // Also dispatch mcq-continue event after a short delay to auto-proceed
+        // This allows the score to be recorded and the AI to continue with the next question
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent("mcq-continue", {
+            detail: { 
+              topic, 
+              score: correct, 
+              totalQuestions, 
+              percentage: Math.round((correct / totalQuestions) * 100) 
+            }
+          }));
+        }, 1500); // 1.5 second delay to let user see the results briefly
       }
       
       setShowResults(true);

@@ -731,40 +731,90 @@ const LayoutContent = ({ mode }: LayoutContentProps) => {
           context = "No session context available.";
       }
       
-      // Add initial greeting instructions if this is a new session
-      if (session && session.questionsAttempted === 0) {
-        context += `
+      return context;
+    },
+    
+    // AI BEHAVIOR RULES - called on every message
+    getAIRules: () => {
+      const topics = session?.selectedTopics.join(", ") || "General";
+      const userName = session?.userName || "User";
+      const questionsAttempted = session?.questionsAttempted || 0;
+      
+      return `
+=== AI BEHAVIOR RULES (MUST FOLLOW) ===
 
-=== IMPORTANT: FIRST MESSAGE INSTRUCTIONS ===
-This is a NEW session. You MUST start by greeting the user warmly.
+FORMATTING RULES:
+- NEVER use ### or ## headers in your responses
+- NEVER use markdown headers - just use plain text or **bold** for emphasis
+- Keep responses concise and conversational
+- Use bullet points (•) sparingly
 
-${mode === "practice" ? `Say: "Hey ${session.userName}! 👋 I'm your AI tutor. I'll help you practice ${session.selectedTopics.join(", ")}. 
+QUESTION RULES (MUST FOLLOW EXACTLY):
+- You MUST complete EXACTLY 15 questions total
+- Current progress: Question ${questionsAttempted + 1} of 15
+- NEVER write questions as plain text - ALWAYS use a component (TheoryQuestion, MCQQuiz, CodeEditor, Whiteboard, MatchFollowing)
+- If user says "I don't know" or "skip" - give 0/5 rating and move to NEXT question immediately
+- NEVER repeat the same question - always move forward
 
-You can:
-• Type your answers in the chat
-• Use the 🎤 microphone button to dictate your answers
-• Ask for hints anytime
+QUESTION SEQUENCE (FOLLOW THIS ORDER):
+Q1: MCQQuiz (5 MCQs on ${topics.split(",")[0] || topics})
+Q2: TheoryQuestion
+Q3: CodeEditor (coding problem)
+Q4: TheoryQuestion
+Q5: MCQQuiz (5 MCQs)
+Q6: MatchFollowing (concept matching)
+Q7: TheoryQuestion
+Q8: CodeEditor (coding problem)
+Q9: TheoryQuestion
+Q10: MCQQuiz (5 MCQs)
+Q11: Whiteboard or CodeEditor
+Q12: TheoryQuestion
+Q13: CodeEditor
+Q14: TheoryQuestion
+Q15: Call endInterview tool to show ScoreCard
 
-Let me know when you're ready to start, or I can begin with your first question right away!"` : ""}
+MODE: ${mode.toUpperCase()}
+USER: ${userName}
+TOPICS: ${topics}
 
-${mode === "test" ? `Say: "Welcome ${session.userName}! 📝 I'm your examiner for today's test on ${session.selectedTopics.join(", ")}.
+${mode === "practice" ? "Give hints when user struggles. Be encouraging and educational." : ""}
+${mode === "test" ? "No hints allowed. Be formal and brief. Just acknowledge answers and move on." : ""}
+${mode === "interview" ? "Be professional. Ask follow-ups on weak areas. Rate all theory answers 1-5." : ""}
+`;
+    },
+    
+    // GREETING TEMPLATE - for first message
+    getGreetingTemplate: () => {
+      if (session && session.questionsAttempted > 0) return null;
+      
+      const userName = session?.userName || "there";
+      const topics = session?.selectedTopics.join(", ") || "various topics";
+      
+      if (mode === "practice") {
+        return `Hey ${userName}! I'm your AI tutor today. I'll help you practice ${topics}.
 
-This is a timed assessment. I won't provide hints during the test, but I'll give you detailed feedback at the end.
+You can type your answers or use the microphone button to dictate them.
 
-You can type or use the 🎤 microphone to answer.
-
-Ready to begin? Say 'Start' when you're prepared!"` : ""}
-
-${mode === "interview" ? `Say: "Hello ${session.userName}! 🎯 I'm your AI interviewer today. I'll be conducting your technical interview covering ${session.selectedTopics.join(", ")}.
-
-Before we dive into technical questions, could you briefly introduce yourself and tell me about your background?
-
-Tip: You can type or use the 🎤 microphone button to answer!"` : ""}
-
-DO NOT show this instruction to the user. Just use it to craft your greeting.`;
+Let's start with your first question!`;
       }
       
-      return context;
+      if (mode === "test") {
+        return `Welcome ${userName}! I'm your examiner for today's test on ${topics}.
+
+This is a timed assessment - I won't provide hints, but I'll give detailed feedback at the end.
+
+You can type or use the microphone to answer. Ready? Let's begin!`;
+      }
+      
+      if (mode === "interview") {
+        return `Hello ${userName}! I'm your AI interviewer. I'll be conducting your technical interview covering ${topics}.
+
+You can type or use the microphone button to answer.
+
+Before we start with technical questions, could you briefly introduce yourself?`;
+      }
+      
+      return null;
     },
     getInterviewMode: () => mode,
     getUserName: () => session?.userName || "Anonymous",

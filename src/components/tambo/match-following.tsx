@@ -1,8 +1,43 @@
 "use client";
 
+import React, { useState, useCallback } from "react";
 import { useTamboComponentState } from "@tambo-ai/react";
 import { z } from "zod";
-import { useState, useCallback } from "react";
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MARKDOWN RENDERER
+// ═══════════════════════════════════════════════════════════════════════════
+
+const renderMarkdown = (text: string) => {
+  if (!text) return null;
+  
+  const processInline = (text: string, baseKey: string): React.ReactNode[] => {
+    const result: React.ReactNode[] = [];
+    const regex = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g;
+    let lastIndex = 0;
+    let match;
+    let i = 0;
+    
+    while ((match = regex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        result.push(<span key={`${baseKey}-${i++}`}>{text.slice(lastIndex, match.index)}</span>);
+      }
+      const m = match[0];
+      if (m.startsWith("**")) {
+        result.push(<strong key={`${baseKey}-${i++}`} className="font-bold text-white">{m.slice(2, -2)}</strong>);
+      } else if (m.startsWith("*")) {
+        result.push(<em key={`${baseKey}-${i++}`} className="italic">{m.slice(1, -1)}</em>);
+      } else if (m.startsWith("`")) {
+        result.push(<code key={`${baseKey}-${i++}`} className="px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded font-mono text-sm">{m.slice(1, -1)}</code>);
+      }
+      lastIndex = regex.lastIndex;
+    }
+    if (lastIndex < text.length) result.push(<span key={`${baseKey}-end`}>{text.slice(lastIndex)}</span>);
+    return result.length > 0 ? result : [<span key={`${baseKey}-plain`}>{text}</span>];
+  };
+  
+  return processInline(text, "md");
+};
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SCHEMA
@@ -206,7 +241,7 @@ export const MatchFollowing = ({
 
         {/* Instructions */}
         <div className="p-4 bg-white/5 border-b border-white/10">
-          <p className="text-white/70">{instructions}</p>
+          <div className="text-white/70">{renderMarkdown(instructions)}</div>
           {!showResults && (
             <p className="text-white/40 text-sm mt-2">
               💡 Click an item on the left, then click its match on the right

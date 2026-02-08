@@ -272,8 +272,10 @@ const getJavaScriptQuiz = () => ({
 // TOOLS FOR CODING CHALLENGES
 // ═══════════════════════════════════════════════════════════════════════════
 
-const getCodingChallenge = (topic: string) => {
-  const topicConfig = getTopicById(topic.toLowerCase()) || dsaTopic;
+const getCodingChallenge = (topic: string | unknown) => {
+  // Guard against non-string topic values
+  const topicStr = typeof topic === "string" ? topic.toLowerCase() : "dsa";
+  const topicConfig = getTopicById(topicStr) || dsaTopic;
   
   // Find subtopics that prefer coding format
   const codingSubtopics = topicConfig.subtopics.filter((s: { preferredFormats: string[] }) => 
@@ -313,8 +315,10 @@ const getCodingChallenge = (topic: string) => {
 // TOOLS FOR MATCH THE FOLLOWING
 // ═══════════════════════════════════════════════════════════════════════════
 
-const getMatchQuestion = (topic: string) => {
-  const topicConfig = getTopicById(topic.toLowerCase()) || dsaTopic;
+const getMatchQuestion = (topic: string | unknown) => {
+  // Guard against non-string topic values
+  const topicStr = typeof topic === "string" ? topic.toLowerCase() : "dsa";
+  const topicConfig = getTopicById(topicStr) || dsaTopic;
   
   // Find subtopics that prefer match format
   const matchSubtopics = topicConfig.subtopics.filter((s: { preferredFormats: string[] }) => 
@@ -748,7 +752,9 @@ export const tools: TamboTool[] = [
     name: "getTopicInfo",
     description: "Get detailed information about a topic including subtopics, key concepts, and preferred question formats. Use this to understand what concepts to cover and how to structure questions for a topic.",
     tool: ({ topicId }) => {
-      const topic = getTopicById(topicId);
+      // Guard against non-string topicId
+      const safeTopicId = typeof topicId === "string" ? topicId.toLowerCase() : "dsa";
+      const topic = getTopicById(safeTopicId);
       if (!topic) {
         return {
           error: `Topic '${topicId}' not found`,
