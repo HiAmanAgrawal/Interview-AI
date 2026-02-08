@@ -2,7 +2,7 @@
 
 import { useTamboComponentState } from "@tambo-ai/react";
 import { z } from "zod";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SCHEMA
@@ -34,6 +34,28 @@ export const MCQQuiz = ({ topic, questions = [], difficulty = "medium" }: MCQQui
   const [showResultsState, setShowResults] = useTamboComponentState("showResults", false);
   const [showExplanation, setShowExplanation] = useState(false);
   
+  // Time tracking
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const startTimeRef = useRef<number>(Date.now());
+  
+  // Timer effect
+  useEffect(() => {
+    if (showResultsState) return; // Stop timer when results are shown
+    
+    const interval = setInterval(() => {
+      setElapsedTime(Math.floor((Date.now() - startTimeRef.current) / 1000));
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [showResultsState]);
+  
+  // Format time display
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+  
   // Quiz summary state - visible to AI for context
   const [, setQuizSummary] = useTamboComponentState<{
     topic: string;
@@ -44,6 +66,7 @@ export const MCQQuiz = ({ topic, questions = [], difficulty = "medium" }: MCQQui
     status: "in_progress" | "completed";
     wrongQuestionIds: string[];
     difficulty: string;
+    timeSpent: number; // seconds
   } | null>("quizSummary", null);
   
   // Ensure we have valid default values
@@ -126,6 +149,9 @@ export const MCQQuiz = ({ topic, questions = [], difficulty = "medium" }: MCQQui
         }
       });
       
+      // Calculate time spent
+      const timeSpentSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      
       const quizResultData = {
         topic,
         totalQuestions,
@@ -135,6 +161,8 @@ export const MCQQuiz = ({ topic, questions = [], difficulty = "medium" }: MCQQui
         status: "completed" as const,
         wrongQuestionIds: wrongIds,
         difficulty: difficulty || "medium",
+        timeSpent: timeSpentSeconds,
+        avgTimePerQuestion: Math.round(timeSpentSeconds / totalQuestions),
       };
       
       // Store quiz summary for AI context
@@ -253,13 +281,31 @@ export const MCQQuiz = ({ topic, questions = [], difficulty = "medium" }: MCQQui
           </div>
           
           {/* Actions */}
-          <div className="p-6 border-t border-white/10 bg-white/5">
-            <button
-              onClick={handleRestart}
-              className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-medium hover:opacity-90 transition-all"
-            >
-              Try Again
-            </button>
+          <div className="p-6 border-t border-white/10 bg-white/5 space-y-3">
+            <p className="text-white/50 text-sm text-center mb-3">
+              Type in the chat to continue, or click a button below
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleRestart}
+                className="flex-1 py-3 bg-white/10 text-white rounded-xl font-medium hover:bg-white/20 transition-all"
+              >
+                🔄 Try Again
+              </button>
+              <button
+                onClick={() => {
+                  // Dispatch event to continue the interview
+                  if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent("mcq-continue", {
+                      detail: { topic, score, totalQuestions, percentage }
+                    }));
+                  }
+                }}
+                className="flex-1 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-medium hover:opacity-90 transition-all"
+              >
+                ✅ Continue →
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -279,6 +325,9 @@ export const MCQQuiz = ({ topic, questions = [], difficulty = "medium" }: MCQQui
               <div className="flex items-center gap-2">
                 <span className={`text-xs px-2 py-0.5 rounded-full border ${difficultyColors[difficulty]}`}>
                   {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+                </span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/60">
+                  ⏱️ {formatTime(elapsedTime)}
                 </span>
               </div>
             </div>

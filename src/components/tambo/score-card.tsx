@@ -29,15 +29,18 @@ export type ScoreCardProps = z.infer<typeof scoreCardSchema>;
 // ═══════════════════════════════════════════════════════════════════════════
 
 export const ScoreCard = ({ 
-  title, 
-  totalScore, 
-  maxScore, 
-  quizzesTaken, 
+  title = "Performance Summary", 
+  totalScore = 0, 
+  maxScore = 0, 
+  quizzesTaken = 0, 
   topicBreakdown,
   rank = "Learner",
   message 
 }: ScoreCardProps) => {
-  const percentage = Math.round((totalScore / maxScore) * 100);
+  // Handle undefined/null values with safe defaults
+  const safeTotal = totalScore ?? 0;
+  const safeMax = maxScore ?? 1; // Avoid division by zero
+  const percentage = safeMax > 0 ? Math.round((safeTotal / safeMax) * 100) : 0;
   
   const getRankEmoji = (rank: string) => {
     const ranks: Record<string, string> = {
@@ -178,8 +181,8 @@ export const ScoreCard = ({
         <div className="grid grid-cols-3 border-t border-white/10">
           {[
             { label: "Accuracy", value: `${percentage}%`, icon: "🎯" },
-            { label: "Correct", value: totalScore.toString(), icon: "✅" },
-            { label: "Wrong", value: (maxScore - totalScore).toString(), icon: "❌" },
+            { label: "Correct", value: safeTotal.toString(), icon: "✅" },
+            { label: "Wrong", value: Math.max(0, safeMax - safeTotal).toString(), icon: "❌" },
           ].map((stat, idx) => (
             <div 
               key={idx} 

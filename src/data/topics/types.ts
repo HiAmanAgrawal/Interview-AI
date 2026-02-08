@@ -1,8 +1,58 @@
 /**
  * Topic Types
- * Type definitions for all question formats
+ * Type definitions for topic configuration (AI generates questions dynamically)
  */
 
+export type QuestionFormat = "mcq" | "theory" | "coding" | "whiteboard" | "match";
+
+export interface SubTopic {
+  id: string;
+  name: string;
+  description: string;
+  difficulty: "easy" | "medium" | "hard";
+  // Preferred question formats for this subtopic
+  preferredFormats: QuestionFormat[];
+  // Key concepts to cover
+  keyConcepts: string[];
+  // Example question prompts for AI
+  samplePrompts?: string[];
+}
+
+export interface TopicConfig {
+  id: string;
+  name: string;
+  shortName: string;
+  description: string;
+  icon: string;
+  color: string;
+  
+  // Subtopics with their configurations
+  subtopics: SubTopic[];
+  
+  // Default question format preferences for this topic
+  defaultFormats: QuestionFormat[];
+  
+  // Estimated time per question type (in seconds)
+  timePerFormat: {
+    mcq: number;
+    theory: number;
+    coding: number;
+    whiteboard: number;
+    match: number;
+  };
+  
+  // Difficulty distribution recommendation
+  difficultyMix: {
+    easy: number;   // percentage
+    medium: number;
+    hard: number;
+  };
+  
+  // Tags for categorization
+  tags: string[];
+}
+
+// Legacy types for backward compatibility (keep existing components working)
 export interface MCQQuestion {
   id: string;
   type: "mcq";
@@ -28,7 +78,7 @@ export interface CodingQuestion {
   solution?: string;
   hints?: string[];
   difficulty: "easy" | "medium" | "hard";
-  timeLimit?: number; // in minutes
+  timeLimit?: number;
   language: "javascript" | "python" | "typescript";
   tags?: string[];
 }
@@ -40,7 +90,7 @@ export interface MatchQuestion {
   instructions?: string;
   leftColumn: { id: string; text: string }[];
   rightColumn: { id: string; text: string }[];
-  correctMatches: { leftId: string; rightId: string }[]; // Array of match pairs
+  correctMatches: { leftId: string; rightId: string }[];
   difficulty: "easy" | "medium" | "hard";
   tags?: string[];
 }
@@ -51,12 +101,13 @@ export interface WhiteboardQuestion {
   title: string;
   question: string;
   hints?: string[];
-  sampleDiagram?: string; // URL or base64
+  sampleDiagram?: string;
   difficulty: "easy" | "medium" | "hard";
   timeLimit?: number;
   tags?: string[];
 }
 
+// Legacy TopicData type (for backward compatibility)
 export interface TopicData {
   id: string;
   name: string;

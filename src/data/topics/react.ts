@@ -1,208 +1,157 @@
-import { TopicData } from "./types";
+import { TopicConfig } from "./types";
 
-export const reactTopic: TopicData = {
+export const reactTopic: TopicConfig = {
   id: "react",
   name: "React.js",
-  description: "Hooks, Components, State Management, and Modern React Patterns",
+  shortName: "React",
+  description: "React fundamentals, hooks, state management, and advanced patterns",
   icon: "⚛️",
-  color: "from-cyan-500 to-blue-500",
+  color: "from-cyan-400 to-blue-500",
   
-  mcqQuestions: [
+  subtopics: [
     {
-      id: "react-mcq-1",
-      type: "mcq",
-      question: "What is the virtual DOM in React?",
-      options: [
-        "A direct copy of the browser DOM",
-        "A lightweight JavaScript representation of the DOM",
-        "A browser API for faster rendering",
-        "A CSS framework for React",
-      ],
-      correctAnswer: 1,
-      explanation: "The virtual DOM is a lightweight JavaScript object that represents the actual DOM. React uses it to optimize updates by comparing changes before applying them.",
+      id: "react-fundamentals",
+      name: "React Fundamentals",
+      description: "Core React concepts",
       difficulty: "easy",
-      tags: ["fundamentals", "virtual-dom"],
+      preferredFormats: ["mcq", "theory"],
+      keyConcepts: [
+        "JSX",
+        "Components (functional vs class)",
+        "Props",
+        "State",
+        "Virtual DOM",
+        "Rendering",
+      ],
     },
     {
-      id: "react-mcq-2",
-      type: "mcq",
-      question: "What hook is used for side effects?",
-      options: ["useState", "useEffect", "useContext", "useReducer"],
-      correctAnswer: 1,
-      explanation: "useEffect is used for side effects like data fetching, subscriptions, or manually changing the DOM.",
-      difficulty: "easy",
-      tags: ["hooks"],
-    },
-    {
-      id: "react-mcq-3",
-      type: "mcq",
-      question: "What is the purpose of React.memo()?",
-      options: [
-        "To create memoized values",
-        "To prevent unnecessary re-renders of functional components",
-        "To store component state",
-        "To handle errors in components",
-      ],
-      correctAnswer: 1,
-      explanation: "React.memo() is a higher-order component that memoizes the rendered output and skips re-rendering if props haven't changed.",
+      id: "react-hooks",
+      name: "React Hooks",
+      description: "Built-in and custom hooks",
       difficulty: "medium",
-      tags: ["optimization", "memoization"],
+      preferredFormats: ["mcq", "coding", "theory"],
+      keyConcepts: [
+        "useState",
+        "useEffect",
+        "useContext",
+        "useReducer",
+        "useRef",
+        "useMemo",
+        "useCallback",
+        "Custom hooks",
+        "Rules of hooks",
+      ],
+      samplePrompts: [
+        "Explain the difference between useMemo and useCallback",
+        "When would you use useReducer over useState?",
+        "Create a custom hook for fetching data",
+      ],
     },
     {
-      id: "react-mcq-4",
-      type: "mcq",
-      question: "Which is NOT a valid React hook rule?",
-      options: [
-        "Only call hooks at the top level",
-        "Only call hooks from React functions",
-        "Hooks can be called inside loops",
-        "Custom hooks should start with 'use'",
-      ],
-      correctAnswer: 2,
-      explanation: "Hooks cannot be called inside loops, conditions, or nested functions. They must be called at the top level.",
+      id: "react-lifecycle",
+      name: "Component Lifecycle",
+      description: "Component lifecycle and effects",
       difficulty: "medium",
-      tags: ["hooks", "rules"],
+      preferredFormats: ["theory", "mcq"],
+      keyConcepts: [
+        "Mounting, updating, unmounting",
+        "useEffect cleanup",
+        "Dependency arrays",
+        "Effect timing",
+        "Strict mode behavior",
+      ],
     },
     {
-      id: "react-mcq-5",
-      type: "mcq",
-      question: "What is the correct way to update state based on previous state?",
-      options: [
-        "setState(state + 1)",
-        "setState(prevState => prevState + 1)",
-        "setState(this.state + 1)",
-        "state = state + 1",
+      id: "react-state-management",
+      name: "State Management",
+      description: "Managing application state",
+      difficulty: "hard",
+      preferredFormats: ["theory", "coding"],
+      keyConcepts: [
+        "Context API",
+        "Redux basics",
+        "Zustand/Jotai",
+        "State lifting",
+        "Prop drilling solutions",
+        "Server state vs client state",
       ],
-      correctAnswer: 1,
-      explanation: "Using the functional update form ensures you're working with the most recent state value.",
-      difficulty: "easy",
-      tags: ["state", "hooks"],
+    },
+    {
+      id: "react-patterns",
+      name: "React Patterns",
+      description: "Common React design patterns",
+      difficulty: "hard",
+      preferredFormats: ["theory", "coding"],
+      keyConcepts: [
+        "Compound components",
+        "Render props",
+        "Higher-order components",
+        "Container/Presentational pattern",
+        "Controlled vs uncontrolled components",
+        "Error boundaries",
+      ],
+    },
+    {
+      id: "react-performance",
+      name: "Performance Optimization",
+      description: "Optimizing React applications",
+      difficulty: "hard",
+      preferredFormats: ["theory", "mcq"],
+      keyConcepts: [
+        "React.memo",
+        "useMemo/useCallback",
+        "Code splitting",
+        "Lazy loading",
+        "Virtualization",
+        "Avoiding unnecessary re-renders",
+        "Profiling",
+      ],
+    },
+    {
+      id: "react-forms",
+      name: "Forms & Validation",
+      description: "Handling forms in React",
+      difficulty: "medium",
+      preferredFormats: ["coding", "theory"],
+      keyConcepts: [
+        "Controlled inputs",
+        "Form submission",
+        "Validation strategies",
+        "React Hook Form",
+        "Formik basics",
+      ],
+    },
+    {
+      id: "react-routing",
+      name: "Routing",
+      description: "Client-side routing",
+      difficulty: "medium",
+      preferredFormats: ["mcq", "coding"],
+      keyConcepts: [
+        "React Router",
+        "Route parameters",
+        "Nested routes",
+        "Protected routes",
+        "Navigation hooks",
+      ],
     },
   ],
   
-  codingQuestions: [
-    {
-      id: "react-code-1",
-      type: "coding",
-      title: "Implement useDebounce Hook",
-      question: "Create a custom hook called useDebounce that debounces a value by a specified delay.",
-      starterCode: `function useDebounce(value, delay) {
-  // Your code here
+  defaultFormats: ["mcq", "coding", "theory"],
   
-}
-
-// Usage example:
-// const debouncedSearch = useDebounce(searchTerm, 500);`,
-      testCases: [
-        {
-          input: "value: 'hello', delay: 500",
-          expectedOutput: "Returns 'hello' after 500ms delay",
-        },
-      ],
-      solution: `function useDebounce(value, delay) {
-  const [debouncedValue, setDebouncedValue] = useState(value);
+  timePerFormat: {
+    mcq: 45,
+    theory: 120,
+    coding: 360,
+    whiteboard: 600,
+    match: 60,
+  },
   
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-    
-    return () => clearTimeout(timer);
-  }, [value, delay]);
+  difficultyMix: {
+    easy: 20,
+    medium: 50,
+    hard: 30,
+  },
   
-  return debouncedValue;
-}`,
-      hints: ["Use useState to store the debounced value", "Use useEffect with setTimeout", "Don't forget cleanup!"],
-      difficulty: "medium",
-      language: "javascript",
-      tags: ["hooks", "custom-hooks"],
-    },
-    {
-      id: "react-code-2",
-      type: "coding",
-      title: "Toggle Component",
-      question: "Create a Toggle component that switches between on/off states and accepts an onChange callback.",
-      starterCode: `function Toggle({ initialState = false, onChange }) {
-  // Your code here
-  
-  return (
-    // Your JSX here
-  );
-}`,
-      testCases: [
-        {
-          input: "initialState: false",
-          expectedOutput: "Renders toggle in off state, clicking toggles to on",
-        },
-      ],
-      solution: `function Toggle({ initialState = false, onChange }) {
-  const [isOn, setIsOn] = useState(initialState);
-  
-  const handleToggle = () => {
-    const newState = !isOn;
-    setIsOn(newState);
-    onChange?.(newState);
-  };
-  
-  return (
-    <button onClick={handleToggle}>
-      {isOn ? 'ON' : 'OFF'}
-    </button>
-  );
-}`,
-      hints: ["Use useState for the toggle state", "Call onChange when state changes"],
-      difficulty: "easy",
-      language: "javascript",
-      tags: ["components", "state"],
-    },
-  ],
-  
-  matchQuestions: [
-    {
-      id: "react-match-1",
-      type: "match",
-      title: "Match React Hooks with Their Purpose",
-      leftColumn: [
-        { id: "l1", text: "useState" },
-        { id: "l2", text: "useEffect" },
-        { id: "l3", text: "useContext" },
-        { id: "l4", text: "useRef" },
-        { id: "l5", text: "useMemo" },
-      ],
-      rightColumn: [
-        { id: "r1", text: "Manage local component state" },
-        { id: "r2", text: "Perform side effects" },
-        { id: "r3", text: "Access context values" },
-        { id: "r4", text: "Persist values across renders" },
-        { id: "r5", text: "Memoize expensive calculations" },
-      ],
-      correctMatches: [
-        { leftId: "l1", rightId: "r1" },
-        { leftId: "l2", rightId: "r2" },
-        { leftId: "l3", rightId: "r3" },
-        { leftId: "l4", rightId: "r4" },
-        { leftId: "l5", rightId: "r5" },
-      ],
-      difficulty: "easy",
-      tags: ["hooks"],
-    },
-  ],
-  
-  whiteboardQuestions: [
-    {
-      id: "react-wb-1",
-      type: "whiteboard",
-      title: "Design a Component Architecture",
-      question: "Design the component architecture for a social media feed with posts, comments, and likes. Show component hierarchy and data flow.",
-      hints: [
-        "Start with App component at the top",
-        "Break down into Feed, Post, Comment components",
-        "Consider where state should live",
-        "Show props flowing down",
-      ],
-      difficulty: "medium",
-      timeLimit: 15,
-      tags: ["architecture", "components"],
-    },
-  ],
+  tags: ["frontend", "framework", "ui", "javascript"],
 };

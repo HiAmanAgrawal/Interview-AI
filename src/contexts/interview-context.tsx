@@ -105,6 +105,8 @@ export interface InterviewContextType {
     wrongAnswers: number;
     percentage: number;
     difficulty: string;
+    timeSpent?: number;
+    avgTimePerQuestion?: number;
     questions?: Array<{
       question: string;
       isCorrect: boolean;
@@ -365,6 +367,8 @@ export const InterviewProvider = ({
     wrongAnswers: number;
     percentage: number;
     difficulty: string;
+    timeSpent?: number; // in seconds
+    avgTimePerQuestion?: number;
     questions?: Array<{
       question: string;
       isCorrect: boolean;
@@ -405,16 +409,25 @@ export const InterviewProvider = ({
       };
 
       const analysis = analyzeTopics(newTopicScores);
+      
+      // Calculate new average time
+      const newTimeSpent = prev.timeSpentSeconds + (quizResult.timeSpent || 0);
+      const newQuestionsAttempted = prev.questionsAttempted + quizResult.totalQuestions;
+      const newAvgTime = newQuestionsAttempted > 0 
+        ? Math.round(newTimeSpent / newQuestionsAttempted)
+        : 0;
 
       const updated = {
         ...prev,
-        questionsAttempted: prev.questionsAttempted + quizResult.totalQuestions,
+        questionsAttempted: newQuestionsAttempted,
         questionsCorrect: prev.questionsCorrect + quizResult.correctAnswers,
         totalScore: prev.totalScore + quizResult.correctAnswers,
         maxPossibleScore: prev.maxPossibleScore + quizResult.totalQuestions,
         topicScores: newTopicScores,
         strongTopics: analysis.strong,
         weakTopics: analysis.weak,
+        timeSpentSeconds: newTimeSpent,
+        averageTimePerQuestion: newAvgTime,
         lastActivityAt: new Date(),
         updatedAt: new Date(),
       };

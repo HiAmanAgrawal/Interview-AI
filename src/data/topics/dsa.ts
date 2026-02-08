@@ -1,215 +1,183 @@
-import { TopicData } from "./types";
+import { TopicConfig } from "./types";
 
-export const dsaTopic: TopicData = {
+export const dsaTopic: TopicConfig = {
   id: "dsa",
   name: "Data Structures & Algorithms",
-  description: "Arrays, Trees, Graphs, Sorting, Searching, and Complexity Analysis",
+  shortName: "DSA",
+  description: "Arrays, trees, graphs, sorting, searching, and problem-solving",
   icon: "🧮",
-  color: "from-green-500 to-emerald-500",
+  color: "from-green-500 to-teal-500",
   
-  mcqQuestions: [
+  subtopics: [
     {
-      id: "dsa-mcq-1",
-      type: "mcq",
-      question: "What is the time complexity of binary search?",
-      options: ["O(n)", "O(log n)", "O(n²)", "O(1)"],
-      correctAnswer: 1,
-      explanation: "Binary search divides the search space in half with each comparison, resulting in O(log n) time complexity.",
+      id: "dsa-arrays",
+      name: "Arrays & Strings",
+      description: "Array manipulation and string algorithms",
       difficulty: "easy",
-      tags: ["searching", "complexity"],
+      preferredFormats: ["coding", "mcq"],
+      keyConcepts: [
+        "Two-pointer technique",
+        "Sliding window",
+        "Prefix sums",
+        "String manipulation",
+        "Anagrams",
+        "Subarray problems",
+      ],
+      samplePrompts: [
+        "Find two numbers that add up to a target",
+        "Reverse a string in-place",
+        "Find the longest substring without repeating characters",
+      ],
     },
     {
-      id: "dsa-mcq-2",
-      type: "mcq",
-      question: "Which data structure uses LIFO principle?",
-      options: ["Queue", "Stack", "Array", "Linked List"],
-      correctAnswer: 1,
-      explanation: "A Stack follows LIFO - the last element added is the first one to be removed.",
-      difficulty: "easy",
-      tags: ["stack", "fundamentals"],
-    },
-    {
-      id: "dsa-mcq-3",
-      type: "mcq",
-      question: "What is the worst-case time complexity of Quick Sort?",
-      options: ["O(n log n)", "O(n)", "O(n²)", "O(log n)"],
-      correctAnswer: 2,
-      explanation: "Quick Sort has O(n²) worst-case complexity when pivot selection is poor.",
+      id: "dsa-linked-lists",
+      name: "Linked Lists",
+      description: "Singly and doubly linked lists",
       difficulty: "medium",
-      tags: ["sorting", "complexity"],
+      preferredFormats: ["coding", "theory"],
+      keyConcepts: [
+        "Singly linked list",
+        "Doubly linked list",
+        "Circular linked list",
+        "Fast/slow pointers",
+        "Cycle detection",
+        "Reversal",
+        "Merge operations",
+      ],
     },
     {
-      id: "dsa-mcq-4",
-      type: "mcq",
-      question: "Which BST traversal gives elements in sorted order?",
-      options: ["Preorder", "Postorder", "Inorder", "Level order"],
-      correctAnswer: 2,
-      explanation: "Inorder traversal (left, root, right) of a BST visits nodes in ascending order.",
+      id: "dsa-stacks-queues",
+      name: "Stacks & Queues",
+      description: "LIFO and FIFO data structures",
+      difficulty: "easy",
+      preferredFormats: ["coding", "mcq"],
+      keyConcepts: [
+        "Stack operations",
+        "Queue operations",
+        "Monotonic stack",
+        "Priority queue",
+        "Deque",
+        "Balanced parentheses",
+      ],
+    },
+    {
+      id: "dsa-trees",
+      name: "Trees",
+      description: "Binary trees and tree traversals",
       difficulty: "medium",
-      tags: ["trees", "traversal"],
+      preferredFormats: ["coding", "theory", "whiteboard"],
+      keyConcepts: [
+        "Binary tree",
+        "Binary search tree",
+        "Tree traversals (inorder, preorder, postorder)",
+        "Level order traversal",
+        "Height and depth",
+        "Balanced trees",
+        "AVL trees",
+        "Tree construction",
+      ],
     },
     {
-      id: "dsa-mcq-5",
-      type: "mcq",
-      question: "What data structure is used for BFS?",
-      options: ["Stack", "Queue", "Heap", "Hash Table"],
-      correctAnswer: 1,
-      explanation: "BFS uses a Queue to process nodes level by level.",
-      difficulty: "easy",
-      tags: ["graphs", "bfs"],
-    },
-  ],
-  
-  codingQuestions: [
-    {
-      id: "dsa-code-1",
-      type: "coding",
-      title: "Two Sum",
-      question: "Given an array of integers and a target sum, return indices of two numbers that add up to the target.",
-      starterCode: `function twoSum(nums, target) {
-  // Your code here
-  
-}
-
-// Example:
-// twoSum([2, 7, 11, 15], 9) should return [0, 1]`,
-      testCases: [
-        { input: "[2, 7, 11, 15], 9", expectedOutput: "[0, 1]" },
-        { input: "[3, 2, 4], 6", expectedOutput: "[1, 2]" },
-        { input: "[3, 3], 6", expectedOutput: "[0, 1]" },
-      ],
-      solution: `function twoSum(nums, target) {
-  const map = new Map();
-  for (let i = 0; i < nums.length; i++) {
-    const complement = target - nums[i];
-    if (map.has(complement)) {
-      return [map.get(complement), i];
-    }
-    map.set(nums[i], i);
-  }
-  return [];
-}`,
-      hints: ["Use a hash map for O(n) solution", "Store number and its index", "Check for complement"],
-      difficulty: "easy",
-      language: "javascript",
-      tags: ["arrays", "hash-map"],
-    },
-    {
-      id: "dsa-code-2",
-      type: "coding",
-      title: "Reverse Linked List",
-      question: "Reverse a singly linked list iteratively.",
-      starterCode: `function reverseList(head) {
-  // Your code here
-  // head is the first node with .val and .next properties
-  
-}`,
-      testCases: [
-        { input: "[1, 2, 3, 4, 5]", expectedOutput: "[5, 4, 3, 2, 1]" },
-        { input: "[1, 2]", expectedOutput: "[2, 1]" },
-      ],
-      solution: `function reverseList(head) {
-  let prev = null;
-  let current = head;
-  while (current) {
-    const next = current.next;
-    current.next = prev;
-    prev = current;
-    current = next;
-  }
-  return prev;
-}`,
-      hints: ["Use three pointers: prev, current, next", "Iterate through the list", "Change next pointer direction"],
-      difficulty: "easy",
-      language: "javascript",
-      tags: ["linked-list"],
-    },
-    {
-      id: "dsa-code-3",
-      type: "coding",
-      title: "Valid Parentheses",
-      question: "Given a string containing '(', ')', '{', '}', '[', ']', determine if the input is valid.",
-      starterCode: `function isValid(s) {
-  // Your code here
-  
-}
-
-// Examples:
-// isValid("()") -> true
-// isValid("()[]{}") -> true
-// isValid("(]") -> false`,
-      testCases: [
-        { input: '"()"', expectedOutput: "true" },
-        { input: '"()[]{}"', expectedOutput: "true" },
-        { input: '"(]"', expectedOutput: "false" },
-        { input: '"([)]"', expectedOutput: "false" },
-      ],
-      solution: `function isValid(s) {
-  const stack = [];
-  const map = { ')': '(', '}': '{', ']': '[' };
-  
-  for (const char of s) {
-    if (char in map) {
-      if (stack.pop() !== map[char]) return false;
-    } else {
-      stack.push(char);
-    }
-  }
-  return stack.length === 0;
-}`,
-      hints: ["Use a stack", "Push opening brackets", "Pop and compare for closing brackets"],
-      difficulty: "easy",
-      language: "javascript",
-      tags: ["stack", "strings"],
-    },
-  ],
-  
-  matchQuestions: [
-    {
-      id: "dsa-match-1",
-      type: "match",
-      title: "Match Time Complexities",
-      leftColumn: [
-        { id: "l1", text: "Binary Search" },
-        { id: "l2", text: "Linear Search" },
-        { id: "l3", text: "Merge Sort" },
-        { id: "l4", text: "Bubble Sort" },
-        { id: "l5", text: "Hash Table Lookup" },
-      ],
-      rightColumn: [
-        { id: "r1", text: "O(log n)" },
-        { id: "r2", text: "O(n)" },
-        { id: "r3", text: "O(n log n)" },
-        { id: "r4", text: "O(n²)" },
-        { id: "r5", text: "O(1)" },
-      ],
-      correctMatches: [
-        { leftId: "l1", rightId: "r1" },
-        { leftId: "l2", rightId: "r2" },
-        { leftId: "l3", rightId: "r3" },
-        { leftId: "l4", rightId: "r4" },
-        { leftId: "l5", rightId: "r5" },
-      ],
-      difficulty: "medium",
-      tags: ["complexity"],
-    },
-  ],
-  
-  whiteboardQuestions: [
-    {
-      id: "dsa-wb-1",
-      type: "whiteboard",
-      title: "Design LRU Cache",
-      question: "Design a data structure for Least Recently Used (LRU) cache. It should support get and put operations in O(1) time.",
-      hints: [
-        "Use a combination of data structures",
-        "Hash map for O(1) lookup",
-        "Doubly linked list for O(1) removal/insertion",
-        "Most recently used at head, least at tail",
-      ],
+      id: "dsa-graphs",
+      name: "Graphs",
+      description: "Graph representations and algorithms",
       difficulty: "hard",
-      timeLimit: 25,
-      tags: ["cache", "design"],
+      preferredFormats: ["coding", "theory", "whiteboard"],
+      keyConcepts: [
+        "Graph representations (adjacency list/matrix)",
+        "BFS and DFS",
+        "Shortest path (Dijkstra, Bellman-Ford)",
+        "Topological sort",
+        "Connected components",
+        "Cycle detection",
+        "Minimum spanning tree",
+      ],
+    },
+    {
+      id: "dsa-sorting",
+      name: "Sorting Algorithms",
+      description: "Various sorting techniques",
+      difficulty: "medium",
+      preferredFormats: ["coding", "mcq", "match"],
+      keyConcepts: [
+        "Bubble sort",
+        "Selection sort",
+        "Insertion sort",
+        "Merge sort",
+        "Quick sort",
+        "Heap sort",
+        "Counting sort",
+        "Time complexity analysis",
+      ],
+    },
+    {
+      id: "dsa-searching",
+      name: "Searching Algorithms",
+      description: "Search techniques and binary search variants",
+      difficulty: "medium",
+      preferredFormats: ["coding", "mcq"],
+      keyConcepts: [
+        "Linear search",
+        "Binary search",
+        "Binary search variants",
+        "Search in rotated array",
+        "Find peak element",
+        "Search space problems",
+      ],
+    },
+    {
+      id: "dsa-dp",
+      name: "Dynamic Programming",
+      description: "DP patterns and optimization",
+      difficulty: "hard",
+      preferredFormats: ["coding", "theory"],
+      keyConcepts: [
+        "Memoization vs tabulation",
+        "1D DP problems",
+        "2D DP problems",
+        "Knapsack problems",
+        "Longest common subsequence",
+        "Coin change",
+        "State machine DP",
+      ],
+      samplePrompts: [
+        "Solve the climbing stairs problem",
+        "Find the longest increasing subsequence",
+        "Implement the 0/1 knapsack solution",
+      ],
+    },
+    {
+      id: "dsa-hashing",
+      name: "Hashing",
+      description: "Hash tables and hash-based solutions",
+      difficulty: "medium",
+      preferredFormats: ["coding", "mcq"],
+      keyConcepts: [
+        "Hash tables",
+        "Hash functions",
+        "Collision handling",
+        "Two sum pattern",
+        "Frequency counting",
+        "Grouping problems",
+      ],
     },
   ],
+  
+  defaultFormats: ["coding", "mcq", "theory"],
+  
+  timePerFormat: {
+    mcq: 60,
+    theory: 120,
+    coding: 600,
+    whiteboard: 900,
+    match: 90,
+  },
+  
+  difficultyMix: {
+    easy: 25,
+    medium: 45,
+    hard: 30,
+  },
+  
+  tags: ["algorithms", "problem-solving", "coding", "interview"],
 };

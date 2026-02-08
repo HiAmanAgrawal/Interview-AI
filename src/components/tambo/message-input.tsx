@@ -45,9 +45,41 @@ import {
   type TamboEditor,
 } from "./text-editor";
 
+// Fallback empty component for when dictation fails to load
+const EmptyDictationFallback = () => <></>;
+
 // Lazy load DictationButton for code splitting (framework-agnostic alternative to next/dynamic)
 // eslint-disable-next-line @typescript-eslint/promise-function-async
-const LazyDictationButton = React.lazy(() => import("./dictation-button"));
+const LazyDictationButton = React.lazy(() => 
+  import("./dictation-button").catch(() => {
+    // Return a fallback component if the chunk fails to load
+    return { default: EmptyDictationFallback };
+  })
+);
+
+/**
+ * Error boundary for lazy-loaded components
+ */
+class DictationErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <></>; // Silently fail - dictation is optional
+    }
+    return this.props.children;
+  }
+}
 
 /**
  * Wrapper component that includes Suspense boundary for the lazy-loaded DictationButton.
@@ -62,13 +94,15 @@ const DictationButton = () => {
   }, []);
 
   if (!isMounted) {
-    return null;
+    return <></>;
   }
 
   return (
-    <React.Suspense fallback={null}>
-      <LazyDictationButton />
-    </React.Suspense>
+    <DictationErrorBoundary>
+      <React.Suspense fallback={<></>}>
+        <LazyDictationButton />
+      </React.Suspense>
+    </DictationErrorBoundary>
   );
 };
 

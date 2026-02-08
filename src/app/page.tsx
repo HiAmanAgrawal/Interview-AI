@@ -273,9 +273,12 @@ const Header = ({ onStartClick }: { onStartClick: () => void }) => {
         </nav>
         
         <div className="flex items-center gap-4">
-          <button className="text-white/70 hover:text-white transition-colors hidden sm:block">
+          <a 
+            href="/login"
+            className="text-white/70 hover:text-white transition-colors hidden sm:block"
+          >
             Sign In
-          </button>
+          </a>
           <button 
             onClick={onStartClick}
             className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-medium hover:opacity-90 transition-all hover:scale-105"

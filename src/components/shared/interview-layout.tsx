@@ -1,11 +1,12 @@
 "use client";
 
-import { MessageThreadFull } from "@/components/tambo/message-thread-full";
+import { InterviewThread, type InterviewConfig } from "@/components/tambo/interview-thread";
 import { useMcpServers } from "@/components/tambo/mcp-config-modal";
 import { components, tools } from "@/lib/tambo";
 import { TamboProvider } from "@tambo-ai/react";
 import { InterviewProvider, useInterviewContext, AVAILABLE_TOPICS, type InterviewMode } from "@/contexts/interview-context";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useMemo, useEffect } from "react";
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -160,6 +161,135 @@ const Header = ({ mode }: HeaderProps) => {
         </div>
       </div>
     </header>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INTERVIEW COMPLETION MODAL
+// ═══════════════════════════════════════════════════════════════════════════
+
+interface CompletionModalProps {
+  mode: InterviewMode;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const CompletionModal = ({ mode, isOpen, onClose }: CompletionModalProps) => {
+  const { session, endSession } = useInterviewContext();
+  const router = useRouter();
+  const config = MODE_CONFIG[mode];
+
+  if (!isOpen || !session) return null;
+
+  const scorePercent = session.maxPossibleScore > 0
+    ? Math.round((session.totalScore / session.maxPossibleScore) * 100)
+    : 0;
+
+  const handleEndAndRedirect = (path: string) => {
+    endSession();
+    router.push(path);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      
+      {/* Modal */}
+      <div className="relative z-10 w-full max-w-lg bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
+        {/* Header with gradient */}
+        <div className={`p-6 bg-gradient-to-r ${config.color} relative`}>
+          <div className="absolute inset-0 bg-black/20" />
+          <div className="relative z-10 text-center">
+            <div className="text-6xl mb-3">
+              {scorePercent >= 80 ? "🏆" : scorePercent >= 60 ? "🎯" : scorePercent >= 40 ? "📚" : "💪"}
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-1">
+              {mode === "interview" ? "Interview Complete!" : 
+               mode === "test" ? "Test Complete!" : 
+               "Practice Session Complete!"}
+            </h2>
+            <p className="text-white/80">Great job, {session.userName}!</p>
+          </div>
+        </div>
+        
+        {/* Score Section */}
+        <div className="p-6">
+          <div className="flex justify-center mb-6">
+            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-4 border-purple-500/50 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-white">{scorePercent}%</div>
+                <div className="text-sm text-white/50">Score</div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="text-center p-3 bg-white/5 rounded-xl">
+              <div className="text-2xl font-bold text-white">{session.questionsAttempted}</div>
+              <div className="text-xs text-white/50">Questions</div>
+            </div>
+            <div className="text-center p-3 bg-white/5 rounded-xl">
+              <div className="text-2xl font-bold text-green-400">{session.questionsCorrect}</div>
+              <div className="text-xs text-white/50">Correct</div>
+            </div>
+            <div className="text-center p-3 bg-white/5 rounded-xl">
+              <div className="text-2xl font-bold text-white">{session.averageTimePerQuestion}s</div>
+              <div className="text-xs text-white/50">Avg Time</div>
+            </div>
+          </div>
+          
+          {/* Topic Performance */}
+          {Object.keys(session.topicScores).length > 0 && (
+            <div className="mb-6">
+              <h4 className="text-sm font-medium text-white/40 uppercase tracking-wider mb-3">Topic Performance</h4>
+              <div className="space-y-2">
+                {Object.entries(session.topicScores).map(([topic, score]) => (
+                  <div key={topic} className="flex items-center justify-between p-2 bg-white/5 rounded-lg">
+                    <span className="text-sm text-white/80">{topic}</span>
+                    <span className={`text-sm font-medium ${score.percentage >= 70 ? "text-green-400" : score.percentage >= 50 ? "text-yellow-400" : "text-red-400"}`}>
+                      {score.correct}/{score.total} ({score.percentage}%)
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Action Buttons */}
+          <div className="space-y-3">
+            <button
+              onClick={() => handleEndAndRedirect("/")}
+              className={`w-full py-3 rounded-xl bg-gradient-to-r ${config.color} text-white font-medium hover:opacity-90 transition-all`}
+            >
+              🏠 Back to Home
+            </button>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => handleEndAndRedirect("/practice")}
+                className="py-3 rounded-xl bg-white/10 text-white font-medium hover:bg-white/20 transition-all"
+              >
+                📚 Practice More
+              </button>
+              <button
+                onClick={() => handleEndAndRedirect("/test")}
+                className="py-3 rounded-xl bg-white/10 text-white font-medium hover:bg-white/20 transition-all"
+              >
+                📝 Take Test
+              </button>
+            </div>
+            
+            <button
+              onClick={onClose}
+              className="w-full py-2 text-sm text-white/50 hover:text-white/80 transition-all"
+            >
+              Continue Reviewing
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -320,8 +450,25 @@ interface SidebarProps {
 
 const Sidebar = ({ mode }: SidebarProps) => {
   const { session, getTopicAnalysis } = useInterviewContext();
+  const [, forceUpdate] = useState(0);
   const analysis = getTopicAnalysis();
   const config = MODE_CONFIG[mode];
+
+  // Force update when quiz completes or scores change
+  useEffect(() => {
+    const handleScoreUpdate = () => {
+      console.log("[Sidebar] Score update detected, forcing re-render");
+      forceUpdate(n => n + 1);
+    };
+    
+    window.addEventListener("quiz-complete", handleScoreUpdate);
+    window.addEventListener("theory-score-recorded", handleScoreUpdate);
+    
+    return () => {
+      window.removeEventListener("quiz-complete", handleScoreUpdate);
+      window.removeEventListener("theory-score-recorded", handleScoreUpdate);
+    };
+  }, []);
 
   if (!session) return null;
 
@@ -329,8 +476,11 @@ const Sidebar = ({ mode }: SidebarProps) => {
     ? Math.round((session.totalScore / session.maxPossibleScore) * 100)
     : 0;
 
+  // Key based on session data for forced re-render
+  const sidebarKey = `${session.totalScore}-${session.questionsAttempted}-${session.averageTimePerQuestion}`;
+
   return (
-    <div className="hidden lg:block w-80 shrink-0 p-4 border-r border-white/10 overflow-y-auto">
+    <div key={sidebarKey} className="hidden lg:block w-80 shrink-0 p-4 border-r border-white/10 overflow-y-auto">
       <div className="space-y-6">
         {/* Session Info */}
         <div className={`p-4 rounded-xl bg-gradient-to-r ${config.color.replace("from-", "from-").replace(" to-", "/20 to-")}/20 border border-white/10`}>
@@ -345,19 +495,19 @@ const Sidebar = ({ mode }: SidebarProps) => {
           </div>
           
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-white/5 rounded-lg text-center">
+            <div className="p-3 bg-white/5 rounded-lg text-center transition-all duration-300">
               <div className="text-xl font-bold text-white">{session.totalScore}</div>
               <div className="text-xs text-white/50">Score</div>
             </div>
-            <div className="p-3 bg-white/5 rounded-lg text-center">
+            <div className="p-3 bg-white/5 rounded-lg text-center transition-all duration-300">
               <div className="text-xl font-bold text-white">{scorePercent}%</div>
               <div className="text-xs text-white/50">Accuracy</div>
             </div>
-            <div className="p-3 bg-white/5 rounded-lg text-center">
+            <div className="p-3 bg-white/5 rounded-lg text-center transition-all duration-300">
               <div className="text-xl font-bold text-white">{session.questionsAttempted}</div>
               <div className="text-xs text-white/50">Questions</div>
             </div>
-            <div className="p-3 bg-white/5 rounded-lg text-center">
+            <div className="p-3 bg-white/5 rounded-lg text-center transition-all duration-300">
               <div className="text-xl font-bold text-white">{session.averageTimePerQuestion}s</div>
               <div className="text-xs text-white/50">Avg Time</div>
             </div>
@@ -506,6 +656,18 @@ const LayoutContent = ({ mode }: LayoutContentProps) => {
   const mcpServers = useMcpServers();
   const { session, getPracticeContext, getTestContext, getInterviewContext, recordQuizResults } = useInterviewContext();
   const config = MODE_CONFIG[mode];
+  const [showCompletion, setShowCompletion] = useState(false);
+  
+  // Listen for interview-complete event
+  useEffect(() => {
+    const handleInterviewComplete = (event: CustomEvent) => {
+      console.log("[LayoutContent] Interview complete event:", event.detail);
+      setShowCompletion(true);
+    };
+    
+    window.addEventListener("interview-complete", handleInterviewComplete as EventListener);
+    return () => window.removeEventListener("interview-complete", handleInterviewComplete as EventListener);
+  }, []);
   
   // Listen for quiz-complete events from MCQQuiz component
   useEffect(() => {
@@ -516,14 +678,38 @@ const LayoutContent = ({ mode }: LayoutContentProps) => {
       wrongAnswers: number;
       percentage: number;
       difficulty: string;
+      timeSpent?: number;
     }>) => {
       console.log("[InterviewLayout] Received quiz-complete event:", event.detail);
       recordQuizResults(event.detail);
     };
     
+    // Listen for theory question scores
+    const handleTheoryScore = (event: CustomEvent<{
+      topic: string;
+      score: number;
+      maxScore: number;
+      isCorrect: boolean;
+      timeSpent?: number;
+    }>) => {
+      console.log("[InterviewLayout] Received theory-score-recorded event:", event.detail);
+      recordQuizResults({
+        topic: event.detail.topic,
+        totalQuestions: 1,
+        correctAnswers: event.detail.isCorrect ? 1 : 0,
+        wrongAnswers: event.detail.isCorrect ? 0 : 1,
+        percentage: (event.detail.score / event.detail.maxScore) * 100,
+        difficulty: "medium",
+        timeSpent: event.detail.timeSpent || 30, // Default 30s for theory questions
+      });
+    };
+    
     window.addEventListener("quiz-complete", handleQuizComplete as EventListener);
+    window.addEventListener("theory-score-recorded", handleTheoryScore as EventListener);
+    
     return () => {
       window.removeEventListener("quiz-complete", handleQuizComplete as EventListener);
+      window.removeEventListener("theory-score-recorded", handleTheoryScore as EventListener);
     };
   }, [recordQuizResults]);
   
@@ -621,11 +807,38 @@ Topics Selected: ${session.selectedTopics.join(", ")}`;
         <AnimatedBackground />
         <Header mode={mode} />
         
+        {/* Completion Modal */}
+        <CompletionModal 
+          mode={mode} 
+          isOpen={showCompletion} 
+          onClose={() => setShowCompletion(false)} 
+        />
+        
         <div className="relative z-10 flex h-screen pt-16">
           <Sidebar mode={mode} />
           
           <div className="flex-1 relative">
-            <MessageThreadFull className="h-full" />
+            <InterviewThread 
+              className="h-full"
+              config={{
+                mode,
+                userName: session.userName,
+                topics: session.selectedTopics,
+                questionLimits: {
+                  mcq: 7,
+                  theory: 5,
+                  coding: 2,
+                  total: 15,
+                },
+                enableFullscreen: mode === "interview",
+              }}
+              onQuestionCountUpdate={(count) => {
+                // Auto-trigger completion when 15 questions are done
+                if (count >= 15 && !showCompletion) {
+                  setShowCompletion(true);
+                }
+              }}
+            />
           </div>
         </div>
       </div>

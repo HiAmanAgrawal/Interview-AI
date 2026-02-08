@@ -10,6 +10,7 @@ import { CodeEditor, codeEditorSchema } from "@/components/tambo/code-editor";
 import { Whiteboard, whiteboardSchema } from "@/components/tambo/whiteboard";
 import { MatchFollowing, matchFollowingSchema } from "@/components/tambo/match-following";
 import { StressTimer, stressTimerSchema } from "@/components/tambo/stress-timer";
+import { TheoryQuestion, theoryQuestionSchema } from "@/components/tambo/theory-question";
 import { DataCard, dataCardSchema } from "@/components/ui/card-data";
 import {
   getCountryPopulations,
@@ -25,6 +26,8 @@ import {
   pythonTopic,
   systemDesignTopic,
   sqlTopic,
+  allTopics,
+  getTopicById,
 } from "@/data/topics";
 
 import type { TamboComponent } from "@tambo-ai/react";
@@ -270,39 +273,39 @@ const getJavaScriptQuiz = () => ({
 // ═══════════════════════════════════════════════════════════════════════════
 
 const getCodingChallenge = (topic: string) => {
-  const topicMap: Record<string, typeof dsaTopic> = {
-    dsa: dsaTopic,
-    javascript: javascriptTopic,
-    python: pythonTopic,
-    react: reactTopic,
-    sql: sqlTopic,
-  };
+  const topicConfig = getTopicById(topic.toLowerCase()) || dsaTopic;
   
-  const topicData = topicMap[topic.toLowerCase()] || dsaTopic;
-  const questions = topicData.codingQuestions;
+  // Find subtopics that prefer coding format
+  const codingSubtopics = topicConfig.subtopics.filter((s: { preferredFormats: string[] }) => 
+    s.preferredFormats.includes("coding")
+  );
   
-  if (questions.length === 0) {
+  if (codingSubtopics.length > 0) {
+    const subtopic = codingSubtopics[Math.floor(Math.random() * codingSubtopics.length)];
+    const concept = subtopic.keyConcepts[Math.floor(Math.random() * subtopic.keyConcepts.length)];
+    
     return {
-      title: "Two Sum",
-      question: "Given an array of integers and a target sum, return indices of two numbers that add up to the target.",
-      starterCode: `function twoSum(nums, target) {\n  // Your code here\n}`,
+      title: `${subtopic.name} Challenge`,
+      question: `Write a solution related to: ${concept}. Use the ${topicConfig.name} concepts from ${subtopic.name}.`,
+      starterCode: `// ${subtopic.name} - ${concept}\nfunction solution() {\n  // Your code here\n}`,
       language: "javascript" as const,
-      testCases: [{ input: "[2,7,11,15], 9", expectedOutput: "[0,1]" }],
-      hints: ["Use a hash map for O(n) solution"],
-      difficulty: "easy" as const,
+      testCases: [{ input: "example input", expectedOutput: "expected output" }],
+      hints: subtopic.keyConcepts.slice(0, 2),
+      difficulty: subtopic.difficulty,
+      timeLimit: topicConfig.timePerFormat.coding,
+      instruction: `Generate a coding problem about "${concept}" from ${subtopic.name}. Use the CodeEditor component.`,
     };
   }
   
-  const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+  // Default fallback
   return {
-    title: randomQuestion.title,
-    question: randomQuestion.question,
-    starterCode: randomQuestion.starterCode,
-    language: randomQuestion.language,
-    testCases: randomQuestion.testCases,
-    hints: randomQuestion.hints,
-    difficulty: randomQuestion.difficulty,
-    timeLimit: randomQuestion.timeLimit,
+    title: "Two Sum",
+    question: "Given an array of integers and a target sum, return indices of two numbers that add up to the target.",
+    starterCode: `function twoSum(nums, target) {\n  // Your code here\n}`,
+    language: "javascript" as const,
+    testCases: [{ input: "[2,7,11,15], 9", expectedOutput: "[0,1]" }],
+    hints: ["Use a hash map for O(n) solution"],
+    difficulty: "easy" as const,
   };
 };
 
@@ -311,48 +314,47 @@ const getCodingChallenge = (topic: string) => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const getMatchQuestion = (topic: string) => {
-  const topicMap: Record<string, typeof dsaTopic> = {
-    dsa: dsaTopic,
-    javascript: javascriptTopic,
-    python: pythonTopic,
-    react: reactTopic,
-    sql: sqlTopic,
-    dbms: dbmsTopic,
-    "system-design": systemDesignTopic,
-  };
+  const topicConfig = getTopicById(topic.toLowerCase()) || dsaTopic;
   
-  const topicData = topicMap[topic.toLowerCase()] || dsaTopic;
-  const questions = topicData.matchQuestions;
+  // Find subtopics that prefer match format
+  const matchSubtopics = topicConfig.subtopics.filter((s: { preferredFormats: string[] }) => 
+    s.preferredFormats.includes("match")
+  );
   
-  if (questions.length === 0) {
+  if (matchSubtopics.length > 0) {
+    const subtopic = matchSubtopics[Math.floor(Math.random() * matchSubtopics.length)];
+    
+    // Create a match template based on concepts
+    const concepts = subtopic.keyConcepts.slice(0, 5);
     return {
-      title: "Match Time Complexities",
-      leftColumn: [
-        { id: "l1", text: "Binary Search" },
-        { id: "l2", text: "Linear Search" },
-      ],
-      rightColumn: [
-        { id: "r1", text: "O(log n)" },
-        { id: "r2", text: "O(n)" },
-      ],
-      correctMatches: [
-        { leftId: "l1", rightId: "r1" },
-        { leftId: "l2", rightId: "r2" },
-      ],
-      difficulty: "medium" as const,
-      topic: topicData.name,
+      title: `Match ${subtopic.name} Concepts`,
+      instructions: `Match the ${subtopic.name} concepts with their correct descriptions`,
+      leftColumn: concepts.map((c: string, i: number) => ({ id: `l${i+1}`, text: c })),
+      rightColumn: concepts.map((c: string, i: number) => ({ id: `r${i+1}`, text: `Description of ${c}` })),
+      correctMatches: concepts.map((_: string, i: number) => ({ leftId: `l${i+1}`, rightId: `r${i+1}` })),
+      difficulty: subtopic.difficulty,
+      topic: topicConfig.name,
+      instruction: `Generate a match-the-following for ${subtopic.name}. Replace placeholder descriptions with actual definitions.`,
     };
   }
   
-  const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+  // Default fallback
   return {
-    title: randomQuestion.title,
-    instructions: randomQuestion.instructions,
-    leftColumn: randomQuestion.leftColumn,
-    rightColumn: randomQuestion.rightColumn,
-    correctMatches: randomQuestion.correctMatches,
-    difficulty: randomQuestion.difficulty,
-    topic: topicData.name,
+    title: "Match Time Complexities",
+    leftColumn: [
+      { id: "l1", text: "Binary Search" },
+      { id: "l2", text: "Linear Search" },
+    ],
+    rightColumn: [
+      { id: "r1", text: "O(log n)" },
+      { id: "r2", text: "O(n)" },
+    ],
+    correctMatches: [
+      { leftId: "l1", rightId: "r1" },
+      { leftId: "l2", rightId: "r2" },
+    ],
+    difficulty: "medium" as const,
+    topic: topicConfig.name,
   };
 };
 
@@ -361,15 +363,33 @@ const getMatchQuestion = (topic: string) => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const getWhiteboardQuestion = () => {
-  const questions = systemDesignTopic.whiteboardQuestions;
-  const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+  // Find system design topics with whiteboard preference
+  const whiteboardSubtopics = systemDesignTopic.subtopics.filter((s: { preferredFormats: string[] }) =>
+    s.preferredFormats.includes("whiteboard")
+  );
   
+  if (whiteboardSubtopics.length > 0) {
+    const subtopic = whiteboardSubtopics[Math.floor(Math.random() * whiteboardSubtopics.length)];
+    const concept = subtopic.keyConcepts[Math.floor(Math.random() * subtopic.keyConcepts.length)];
+    const prompts = subtopic.samplePrompts || [];
+    const prompt = prompts.length > 0 ? prompts[Math.floor(Math.random() * prompts.length)] : `Design a system for: ${concept}`;
+    
+    return {
+      title: `${subtopic.name} Design`,
+      question: prompt,
+      hints: subtopic.keyConcepts.slice(0, 4),
+      timeLimit: systemDesignTopic.timePerFormat.whiteboard / 60, // Convert to minutes
+      difficulty: subtopic.difficulty,
+    };
+  }
+  
+  // Default fallback
   return {
-    title: randomQuestion.title,
-    question: randomQuestion.question,
-    hints: randomQuestion.hints,
-    timeLimit: randomQuestion.timeLimit,
-    difficulty: randomQuestion.difficulty,
+    title: "URL Shortener Design",
+    question: "Design a URL shortening service like bit.ly. Consider scalability, storage, and unique ID generation.",
+    hints: ["Consider base62 encoding", "Think about database choices", "How to handle high traffic?"],
+    timeLimit: 20,
+    difficulty: "medium" as const,
   };
 };
 
@@ -722,6 +742,167 @@ export const tools: TamboTool[] = [
       availableContextHelpers: z.array(z.string()),
     }),
   },
+  
+  // Get topic information for generating questions
+  {
+    name: "getTopicInfo",
+    description: "Get detailed information about a topic including subtopics, key concepts, and preferred question formats. Use this to understand what concepts to cover and how to structure questions for a topic.",
+    tool: ({ topicId }) => {
+      const topic = getTopicById(topicId);
+      if (!topic) {
+        return {
+          error: `Topic '${topicId}' not found`,
+          availableTopics: allTopics.map(t => ({ id: t.id, name: t.name })),
+        };
+      }
+      
+      return {
+        id: topic.id,
+        name: topic.name,
+        description: topic.description,
+        subtopics: topic.subtopics.map((s: { name: string; difficulty: string; preferredFormats: string[]; keyConcepts: string[]; samplePrompts?: string[] }) => ({
+          name: s.name,
+          difficulty: s.difficulty,
+          preferredFormats: s.preferredFormats,
+          keyConcepts: s.keyConcepts,
+          samplePrompts: s.samplePrompts || [],
+        })),
+        defaultFormats: topic.defaultFormats,
+        timePerFormat: topic.timePerFormat,
+        difficultyMix: topic.difficultyMix,
+        instruction: `Generate questions based on these subtopics and concepts. Use the preferred formats (mcq, theory, coding, whiteboard, match) as indicated. Follow the difficulty mix: ${topic.difficultyMix.easy}% easy, ${topic.difficultyMix.medium}% medium, ${topic.difficultyMix.hard}% hard.`,
+      };
+    },
+    inputSchema: z.object({
+      topicId: z.string().describe("The topic ID to get information for (e.g., 'dbms', 'react', 'dsa')"),
+    }),
+    outputSchema: z.object({
+      id: z.string().optional(),
+      name: z.string().optional(),
+      description: z.string().optional(),
+      subtopics: z.array(z.object({
+        name: z.string(),
+        difficulty: z.string(),
+        preferredFormats: z.array(z.string()),
+        keyConcepts: z.array(z.string()),
+        samplePrompts: z.array(z.string()),
+      })).optional(),
+      defaultFormats: z.array(z.string()).optional(),
+      timePerFormat: z.record(z.number()).optional(),
+      difficultyMix: z.record(z.number()).optional(),
+      instruction: z.string().optional(),
+      error: z.string().optional(),
+      availableTopics: z.array(z.object({
+        id: z.string(),
+        name: z.string(),
+      })).optional(),
+    }),
+  },
+  
+  // Get all available topics
+  {
+    name: "getAvailableTopics",
+    description: "Get a list of all available topics for interviews/practice. Use this when starting a session or when user asks what topics are available.",
+    tool: () => {
+      return {
+        topics: allTopics.map(t => ({
+          id: t.id,
+          name: t.name,
+          shortName: t.shortName,
+          description: t.description,
+          icon: t.icon,
+          subtopicCount: t.subtopics.length,
+          defaultFormats: t.defaultFormats,
+        })),
+        totalTopics: allTopics.length,
+      };
+    },
+    inputSchema: z.object({}),
+    outputSchema: z.object({
+      topics: z.array(z.object({
+        id: z.string(),
+        name: z.string(),
+        shortName: z.string(),
+        description: z.string(),
+        icon: z.string(),
+        subtopicCount: z.number(),
+        defaultFormats: z.array(z.string()),
+      })),
+      totalTopics: z.number(),
+    }),
+  },
+  
+  // Rate theory question answer
+  {
+    name: "rateTheoryAnswer",
+    description: "Rate a user's theory question answer. Call this after the user submits their answer to a TheoryQuestion component. This will update the component's rating display and record the score.",
+    tool: ({ questionId, rating, feedback, topic, timeSpent }) => {
+      // Dispatch event to update the TheoryQuestion component
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("theory-rating-update", {
+          detail: { id: questionId, rating, feedback }
+        }));
+        
+        // Also dispatch event for score tracking
+        window.dispatchEvent(new CustomEvent("theory-score-recorded", {
+          detail: {
+            topic,
+            score: rating,
+            maxScore: 5,
+            isCorrect: rating >= 3,
+            timeSpent: timeSpent || 30, // Default 30 seconds if not provided
+          }
+        }));
+      }
+      
+      return {
+        success: true,
+        message: `Rated question ${questionId} with ${rating}/5`,
+        rating,
+        feedback,
+      };
+    },
+    inputSchema: z.object({
+      questionId: z.string().describe("The ID of the theory question to rate"),
+      rating: z.number().min(1).max(5).describe("Rating from 1 to 5"),
+      feedback: z.string().describe("Constructive feedback for the user's answer"),
+      topic: z.string().describe("The topic of the question for score tracking"),
+      timeSpent: z.number().optional().describe("Time spent on this question in seconds"),
+    }),
+    outputSchema: z.object({
+      success: z.boolean(),
+      message: z.string(),
+      rating: z.number(),
+      feedback: z.string(),
+    }),
+  },
+  
+  // End interview and show completion screen
+  {
+    name: "endInterview",
+    description: "End the interview session and trigger the completion screen with redirect options. Call this when all questions are completed or when the interview needs to end.",
+    tool: ({ reason, finalScore, totalQuestions }) => {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("interview-complete", {
+          detail: { reason, finalScore, totalQuestions }
+        }));
+      }
+      
+      return {
+        success: true,
+        message: "Interview ended. Showing completion screen with results and navigation options.",
+      };
+    },
+    inputSchema: z.object({
+      reason: z.string().describe("Reason for ending (completed, time_up, user_exit)"),
+      finalScore: z.number().optional().describe("Final score if available"),
+      totalQuestions: z.number().optional().describe("Total questions answered"),
+    }),
+    outputSchema: z.object({
+      success: z.boolean(),
+      message: z.string(),
+    }),
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -741,6 +922,30 @@ export const components: TamboComponent[] = [
     description: "A component that displays the user's quiz score and performance metrics. Use this when the user asks for their score, wants to see their performance, or asks 'what is my score'. Shows total score, percentage, topic breakdown, and motivational messages.",
     component: ScoreCard,
     propsSchema: scoreCardSchema,
+  },
+  
+  // Theory Question Component
+  {
+    name: "TheoryQuestion",
+    description: `REQUIRED for ALL theory/explanation questions - including follow-ups and deep dives.
+
+WHEN TO USE:
+- Any question asking user to explain, describe, or discuss a concept
+- Follow-up questions like "Can you elaborate on X?"
+- Deep dive questions like "Tell me more about Y"
+- Clarification questions like "What do you mean by Z?"
+- ANY question that expects a text/spoken answer (not MCQ)
+
+CRITICAL RULES:
+1. ONLY render this component - DO NOT write the question as text in your message
+2. The component shows the question with a timer - just pass question as prop
+3. User answers via CHAT below (not in component)
+4. After user responds, use rateTheoryAnswer tool to rate 1-5 with feedback
+5. Use sequential IDs: "theory-1", "theory-2", "theory-3" etc.
+6. Pass questionNumber and totalQuestions for progress tracking
+7. NEVER ask a theory question without using this component`,
+    component: TheoryQuestion,
+    propsSchema: theoryQuestionSchema,
   },
   
   // Code Editor Component
