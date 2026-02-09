@@ -164,6 +164,31 @@ export const MatchFollowing = ({
 
   const checkAnswers = () => {
     setShowResults(true);
+    
+    // Calculate score and dispatch event for score tracking and AI continuation
+    const correct = Object.keys(matches).filter((leftId) => correctMatchesRecord[leftId] === matches[leftId]).length;
+    const total = leftColumn.length;
+    const percentage = Math.round((correct / total) * 100);
+    
+    if (typeof window !== "undefined") {
+      // Dispatch event for score tracking
+      window.dispatchEvent(new CustomEvent("match-complete", {
+        detail: {
+          topic: topic || "General",
+          score: correct,
+          totalQuestions: total,
+          percentage,
+          isCorrect: correct >= total / 2,
+        }
+      }));
+      
+      // Dispatch event for AI to continue (after a delay to show results)
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("match-continue", {
+          detail: { topic: topic || "General", score: correct, totalQuestions: total, percentage }
+        }));
+      }, 2000); // 2 second delay
+    }
   };
 
   const resetQuiz = () => {
@@ -251,18 +276,30 @@ export const MatchFollowing = ({
 
         {/* Matching Area */}
         <div className="p-6">
-          <div className="flex gap-8 justify-center relative">
-            {/* SVG for connection lines */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
+          <div className="flex justify-center relative" style={{ gap: "160px" }}>
+            {/* SVG for connection lines - positioned between columns */}
+            <svg 
+              className="absolute pointer-events-none" 
+              style={{ 
+                left: "50%", 
+                transform: "translateX(-50%)",
+                width: "200px",
+                height: "100%",
+                top: "0",
+                zIndex: 1,
+              }}
+            >
               {Object.entries(matches).map(([leftId, rightId]) => {
                 const leftIndex = leftColumn.findIndex((l) => l.id === leftId);
                 const rightIndex = rightColumn.findIndex((r) => r.id === rightId);
                 const matchIdx = getMatchIndex(leftId);
                 const color = getMatchColor(matchIdx);
                 
-                // Calculate positions (approximate)
-                const startY = 40 + leftIndex * 72;
-                const endY = 40 + rightIndex * 72;
+                // Account for header (Column A/B) - ~40px, then each item ~80px (with spacing)
+                const headerOffset = 50;
+                const itemHeight = 76; // Height of each item including gap
+                const startY = headerOffset + leftIndex * itemHeight + 32; // Center of item
+                const endY = headerOffset + rightIndex * itemHeight + 32;
                 
                 let strokeColor = color.line;
                 if (showResults) {
@@ -272,12 +309,13 @@ export const MatchFollowing = ({
                 return (
                   <path
                     key={leftId}
-                    d={`M 280 ${startY} C 340 ${startY}, 380 ${endY}, 440 ${endY}`}
+                    d={`M 0 ${startY} C 60 ${startY}, 140 ${endY}, 200 ${endY}`}
                     fill="none"
                     stroke={strokeColor}
-                    strokeWidth="2"
-                    strokeDasharray={showResults && !isCorrect(leftId) ? "5,5" : "none"}
-                    opacity={0.8}
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeDasharray={showResults && !isCorrect(leftId) ? "8,4" : "none"}
+                    opacity={0.9}
                   />
                 );
               })}
@@ -311,11 +349,12 @@ export const MatchFollowing = ({
                 }
 
                 return (
-                  <button
+                  <div
                     key={item.id}
-                    onClick={() => handleLeftClick(item.id)}
-                    className={`w-64 p-4 rounded-xl border-2 ${borderClass} ${bgClass} text-left transition-all duration-200 relative group`}
-                    disabled={showResults}
+                    onClick={() => !showResults && handleLeftClick(item.id)}
+                    role="button"
+                    tabIndex={showResults ? -1 : 0}
+                    className={`w-64 p-4 rounded-xl border-2 ${borderClass} ${bgClass} text-left transition-all duration-200 relative group cursor-pointer ${showResults ? "cursor-default" : ""}`}
                   >
                     <div className="flex items-center gap-3">
                       <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs text-white/50">
@@ -324,15 +363,17 @@ export const MatchFollowing = ({
                       <span className="text-white/90">{item.text}</span>
                     </div>
                     {isMatched && !showResults && (
-                      <button
+                      <span
                         onClick={(e) => {
                           e.stopPropagation();
                           removeMatch(item.id);
                         }}
-                        className="absolute -right-2 -top-2 w-5 h-5 rounded-full bg-red-500 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                        role="button"
+                        tabIndex={0}
+                        className="absolute -right-2 -top-2 w-5 h-5 rounded-full bg-red-500 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer hover:bg-red-600"
                       >
                         ×
-                      </button>
+                      </span>
                     )}
                     {showResults && isMatched && (
                       <span className={`absolute -right-2 -top-2 w-5 h-5 rounded-full flex items-center justify-center text-xs ${
@@ -341,7 +382,7 @@ export const MatchFollowing = ({
                         {isCorrect(item.id) ? "✓" : "✗"}
                       </span>
                     )}
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -376,15 +417,16 @@ export const MatchFollowing = ({
                 }
 
                 return (
-                  <button
+                  <div
                     key={item.id}
-                    onClick={() => handleRightClick(item.id)}
+                    onClick={() => !showResults && handleRightClick(item.id)}
                     onMouseEnter={() => setHoveredRight(item.id)}
                     onMouseLeave={() => setHoveredRight(null)}
+                    role="button"
+                    tabIndex={showResults ? -1 : 0}
                     className={`w-64 p-4 rounded-xl border-2 ${borderClass} ${bgClass} text-left transition-all duration-200 ${
-                      selectedLeft ? "cursor-pointer" : "cursor-default"
+                      selectedLeft && !showResults ? "cursor-pointer" : "cursor-default"
                     }`}
-                    disabled={showResults}
                   >
                     <div className="flex items-center gap-3">
                       <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs text-white/50">
@@ -392,7 +434,7 @@ export const MatchFollowing = ({
                       </span>
                       <span className="text-white/90">{item.text}</span>
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>

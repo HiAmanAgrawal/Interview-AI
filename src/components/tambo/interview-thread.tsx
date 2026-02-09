@@ -285,16 +285,26 @@ Provide brief feedback (2-3 sentences max) on correctness and approach. Then IMM
       setTimeout(() => submit(), 100);
     };
 
+    // Handle match question completion
+    const handleMatchContinue = (event: CustomEvent) => {
+      console.log("[InterviewThread] Match continue:", event.detail);
+      const { topic, score, totalQuestions, percentage } = event.detail;
+      setValue(`[SYSTEM] User completed Match Following question on "${topic}". Score: ${score}/${totalQuestions} (${percentage}%). Briefly acknowledge their performance and IMMEDIATELY show the next question component.`);
+      setTimeout(() => submit(), 100);
+    };
+
     window.addEventListener("theory-question-timeout", handleTimeout as EventListener);
     window.addEventListener("fullscreen-exit-detected", handleFullscreenExit as EventListener);
     window.addEventListener("mcq-continue", handleMCQContinue as EventListener);
     window.addEventListener("code-submitted", handleCodeSubmitted as EventListener);
+    window.addEventListener("match-continue", handleMatchContinue as EventListener);
 
     return () => {
       window.removeEventListener("theory-question-timeout", handleTimeout as EventListener);
       window.removeEventListener("fullscreen-exit-detected", handleFullscreenExit as EventListener);
       window.removeEventListener("mcq-continue", handleMCQContinue as EventListener);
       window.removeEventListener("code-submitted", handleCodeSubmitted as EventListener);
+      window.removeEventListener("match-continue", handleMatchContinue as EventListener);
     };
   }, [setValue, submit]);
 

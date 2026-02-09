@@ -704,12 +704,54 @@ const LayoutContent = ({ mode }: LayoutContentProps) => {
       });
     };
     
+    // Handle match question completion for score tracking
+    const handleMatchComplete = (event: CustomEvent<{
+      topic: string;
+      score: number;
+      totalQuestions: number;
+      percentage: number;
+      isCorrect: boolean;
+    }>) => {
+      console.log("[InterviewLayout] Received match-complete event:", event.detail);
+      recordQuizResults({
+        topic: event.detail.topic,
+        totalQuestions: event.detail.totalQuestions,
+        correctAnswers: event.detail.score,
+        wrongAnswers: event.detail.totalQuestions - event.detail.score,
+        percentage: event.detail.percentage,
+        difficulty: "medium",
+        timeSpent: 60, // Default 60s for match questions
+      });
+    };
+    
+    // Handle code submission for score tracking (basic tracking)
+    const handleCodeComplete = (event: CustomEvent<{
+      title: string;
+      language: string;
+    }>) => {
+      console.log("[InterviewLayout] Received code-submitted event:", event.detail);
+      // For code submissions, we'll track as attempted (AI will provide actual score)
+      recordQuizResults({
+        topic: "Coding",
+        totalQuestions: 1,
+        correctAnswers: 0, // Will be updated when AI provides feedback
+        wrongAnswers: 0,
+        percentage: 0,
+        difficulty: "medium",
+        timeSpent: 120, // Default 2 min for coding
+      });
+    };
+    
     window.addEventListener("quiz-complete", handleQuizComplete as EventListener);
     window.addEventListener("theory-score-recorded", handleTheoryScore as EventListener);
+    window.addEventListener("match-complete", handleMatchComplete as EventListener);
+    window.addEventListener("code-submitted", handleCodeComplete as EventListener);
     
     return () => {
       window.removeEventListener("quiz-complete", handleQuizComplete as EventListener);
       window.removeEventListener("theory-score-recorded", handleTheoryScore as EventListener);
+      window.removeEventListener("match-complete", handleMatchComplete as EventListener);
+      window.removeEventListener("code-submitted", handleCodeComplete as EventListener);
     };
   }, [recordQuizResults]);
   
