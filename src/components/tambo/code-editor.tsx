@@ -32,8 +32,14 @@ export const codeEditorSchema = z.object({
 const renderMarkdown = (text: string) => {
   if (!text) return null;
   
+  // Add line breaks after sentences (full stop, question mark, exclamation followed by space and uppercase letter)
+  const processedText = text
+    .replace(/\.(\s+)(?=[A-Z])/g, '.\n')
+    .replace(/\?(\s+)(?=[A-Z])/g, '?\n')
+    .replace(/!(\s+)(?=[A-Z])/g, '!\n');
+  
   // Split by code blocks first (triple backticks)
-  const parts = text.split(/(```[\s\S]*?```)/g);
+  const parts = processedText.split(/(```[\s\S]*?```)/g);
   
   return parts.map((part, index) => {
     // Handle code blocks
@@ -101,7 +107,18 @@ const renderMarkdown = (text: string) => {
       return result.length > 0 ? result : [<span key={`${baseKey}-plain`}>{text}</span>];
     };
     
-    return <span key={index}>{processInlineFormatting(part, `part-${index}`)}</span>;
+    // Split by newlines and render with <br /> for non-code parts
+    const lines = part.split('\n');
+    return (
+      <span key={index}>
+        {lines.map((line, lineIdx) => (
+          <React.Fragment key={`line-${index}-${lineIdx}`}>
+            {lineIdx > 0 && <br />}
+            {processInlineFormatting(line, `part-${index}-line-${lineIdx}`)}
+          </React.Fragment>
+        ))}
+      </span>
+    );
   });
 };
 
@@ -159,6 +176,17 @@ export const CodeEditor = ({
     setTestResults([]);
     const startTime = performance.now();
 
+    // Check if user has written any actual code (not just starter code or empty)
+    const trimmedCode = code.trim();
+    const trimmedStarter = starterCode.trim();
+    if (!trimmedCode || trimmedCode === trimmedStarter) {
+      setOutput("⚠️ Please write your solution before running the code.");
+      const endTime = performance.now();
+      setExecutionTime(Math.round(endTime - startTime));
+      setIsRunning(false);
+      return;
+    }
+
     try {
       // Simulate code execution
       await new Promise((resolve) => setTimeout(resolve, 800 + Math.random() * 500));
@@ -186,24 +214,28 @@ export const CodeEditor = ({
           
           setOutput(logs.length > 0 ? logs.join("\n") : "✓ Code executed successfully (no output)");
           
-          // Run test cases
+          // Run test cases - compare output against expected
           if (testCases && testCases.length > 0) {
-            const results = testCases.filter(tc => !tc.isHidden).map((tc, idx) => ({
-              passed: Math.random() > 0.3, // Simulated test results
-              message: `Test ${idx + 1}: ${tc.input} → Expected: ${tc.expectedOutput}`,
-            }));
+            const outputStr = logs.join("\n").trim();
+            const results = testCases.filter(tc => !tc.isHidden).map((tc, idx) => {
+              const passed = outputStr.includes(tc.expectedOutput.trim());
+              return {
+                passed,
+                message: `Test ${idx + 1}: ${tc.input} → Expected: ${tc.expectedOutput}${passed ? "" : " (Got: " + (outputStr || "no output") + ")"}`,
+              };
+            });
             setTestResults(results);
           }
         } catch (err) {
           setOutput(`Error: ${err instanceof Error ? err.message : String(err)}`);
         }
       } else {
-        // For Python, simulate execution
-        setOutput("✓ Code compiled successfully\n\n[Python execution simulated]");
+        // For Python, simulate execution - don't claim tests passed
+        setOutput("⚠️ Python execution is simulated. Submit for AI review to get accurate results.");
         if (testCases && testCases.length > 0) {
           const results = testCases.filter(tc => !tc.isHidden).map((tc, idx) => ({
-            passed: Math.random() > 0.3,
-            message: `Test ${idx + 1}: ${tc.input} → Expected: ${tc.expectedOutput}`,
+            passed: false,
+            message: `Test ${idx + 1}: ${tc.input} → Expected: ${tc.expectedOutput} (Submit for AI review)`,
           }));
           setTestResults(results);
         }
@@ -215,7 +247,7 @@ export const CodeEditor = ({
       setExecutionTime(Math.round(endTime - startTime));
       setIsRunning(false);
     }
-  }, [code, language, testCases]);
+  }, [code, starterCode, language, testCases]);
 
   const passedTests = testResults.filter((r) => r.passed).length;
   const totalTests = testResults.length;

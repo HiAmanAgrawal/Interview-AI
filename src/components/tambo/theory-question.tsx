@@ -29,8 +29,14 @@ const renderMarkdownText = (text: string) => {
   // Guard against undefined/null text
   if (!text) return null;
   
+  // Add line breaks after sentences (full stop, question mark, exclamation followed by space and uppercase letter)
+  const processedText = text
+    .replace(/\.(\s+)(?=[A-Z])/g, '.\n')
+    .replace(/\?(\s+)(?=[A-Z])/g, '?\n')
+    .replace(/!(\s+)(?=[A-Z])/g, '!\n');
+  
   // Split by code blocks first (triple backticks)
-  const parts = text.split(/(```[\s\S]*?```)/g);
+  const parts = processedText.split(/(```[\s\S]*?```)/g);
   
   return parts.map((part, index) => {
     // Handle code blocks
@@ -104,7 +110,18 @@ const renderMarkdownText = (text: string) => {
       return result.length > 0 ? result : [<span key={`${baseKey}-plain`}>{text}</span>];
     };
     
-    return <span key={index}>{processInlineFormatting(part, `part-${index}`)}</span>;
+    // Split by newlines and render with <br /> for non-code parts
+    const lines = part.split('\n');
+    return (
+      <span key={index}>
+        {lines.map((line, lineIdx) => (
+          <React.Fragment key={`line-${index}-${lineIdx}`}>
+            {lineIdx > 0 && <br />}
+            {processInlineFormatting(line, `part-${index}-line-${lineIdx}`)}
+          </React.Fragment>
+        ))}
+      </span>
+    );
   });
 };
 

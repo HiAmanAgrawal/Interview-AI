@@ -115,6 +115,18 @@ const FullscreenManager = ({
         }
         
         setTimeout(() => setShowWarning(false), 5000);
+
+        // Re-enter fullscreen after a short delay
+        setTimeout(async () => {
+          try {
+            if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+              await document.documentElement.requestFullscreen();
+              setIsFullscreen(true);
+            }
+          } catch (e) {
+            console.log("Failed to re-enter fullscreen:", e);
+          }
+        }, 1500);
       }
       wasFullscreen = isNowFullscreen;
     };
@@ -227,15 +239,17 @@ export const InterviewThread = React.forwardRef<
   const [questionCount, setQuestionCount] = useState(0);
   const [tabWarnings, setTabWarnings] = useState<number[]>([]);
 
-  // Handle tab switch - add warning to thread
+  // Handle tab switch - add warning to thread and send system message for EVERY switch
   const handleTabSwitch = useCallback((count: number) => {
     setTabWarnings(prev => [...prev, count]);
     
-    // Also send a message to the AI about the tab switch
+    // Send a system message to the AI about EVERY tab switch
     if (count >= 3) {
-      setValue("[SYSTEM] User has switched tabs 3 times. Issue a final warning that one more switch will end the interview.");
-      setTimeout(() => submit(), 100);
+      setValue("[SYSTEM] User has switched tabs 3 times. Issue a FINAL WARNING that one more switch will end the interview. Be firm.");
+    } else {
+      setValue(`[SYSTEM] User switched tabs or exited fullscreen (Warning #${count}). Warn them that tab switching is monitored and ${3 - count} warning(s) remain before the interview is terminated. Be firm but brief.`);
     }
+    setTimeout(() => submit(), 100);
   }, [setValue, submit]);
 
   // Handle fullscreen enter - notify AI

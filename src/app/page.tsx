@@ -528,7 +528,7 @@ const HowItWorksSection = () => {
                 <div className="hidden lg:block absolute top-12 left-[60%] w-full h-0.5 bg-gradient-to-r from-purple-500/50 to-transparent" />
               )}
               
-              <div className="glass-strong rounded-3xl p-8 text-center relative z-10">
+              <div className="glass-strong rounded-3xl p-8 text-center relative z-10 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 cursor-pointer">
                 <div className="text-5xl mb-4">{step.icon}</div>
                 <div className="text-purple-400 font-mono text-sm mb-2">{step.step}</div>
                 <h3 className="text-xl font-semibold text-white mb-3">{step.title}</h3>
@@ -1223,16 +1223,31 @@ const Footer = () => (
         
         {/* Links */}
         {[
-          { title: "Product", links: ["Features", "For Companies", "Pricing", "API"] },
-          { title: "Company", links: ["About", "Blog", "Careers", "Press"] },
-          { title: "Support", links: ["Help Center", "Contact", "Status", "Terms"] },
+          { title: "Product", links: [
+            { label: "Features", href: "/features" },
+            { label: "For Companies", href: "/companies" },
+            { label: "Pricing", href: "#pricing" },
+            { label: "API", href: "/api-docs" },
+          ]},
+          { title: "Company", links: [
+            { label: "About", href: "/about" },
+            { label: "Blog", href: "/blog" },
+            { label: "Careers", href: "/careers" },
+            { label: "Press", href: "/press" },
+          ]},
+          { title: "Support", links: [
+            { label: "Help Center", href: "/help" },
+            { label: "Contact", href: "/contact" },
+            { label: "Status", href: "/status" },
+            { label: "Terms", href: "/terms" },
+          ]},
         ].map((col, idx) => (
           <div key={idx}>
             <h4 className="text-white font-medium mb-4">{col.title}</h4>
             <ul className="space-y-3">
               {col.links.map((link, i) => (
                 <li key={i}>
-                  <a href="#" className="text-white/50 hover:text-white transition-colors">{link}</a>
+                  <a href={link.href} className="text-white/50 hover:text-white transition-colors">{link.label}</a>
                 </li>
               ))}
             </ul>
@@ -1245,9 +1260,9 @@ const Footer = () => (
           © 2026 InterviewAI. All rights reserved.
         </div>
         <div className="flex gap-6 text-sm">
-          <a href="#" className="text-white/50 hover:text-white transition-colors">Privacy Policy</a>
-          <a href="#" className="text-white/50 hover:text-white transition-colors">Terms of Service</a>
-          <a href="#" className="text-white/50 hover:text-white transition-colors">Cookies</a>
+          <a href="/privacy" className="text-white/50 hover:text-white transition-colors">Privacy Policy</a>
+          <a href="/terms" className="text-white/50 hover:text-white transition-colors">Terms of Service</a>
+          <a href="/terms" className="text-white/50 hover:text-white transition-colors">Cookies</a>
         </div>
       </div>
     </div>

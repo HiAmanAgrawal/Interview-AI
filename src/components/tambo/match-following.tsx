@@ -36,7 +36,7 @@ const renderMarkdown = (text: string) => {
     return result.length > 0 ? result : [<span key={`${baseKey}-plain`}>{text}</span>];
   };
   
-  return processInline(text, "md");
+  return <React.Fragment>{processInline(text, "md")}</React.Fragment>;
 };
 
 // ═══════════════════════════════════════════════════════════════════════════

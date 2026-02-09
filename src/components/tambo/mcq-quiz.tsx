@@ -361,7 +361,14 @@ export const MCQQuiz = ({ topic, questions = [], difficulty = "medium" }: MCQQui
         
         {/* Question */}
         <div className="p-6">
-          <h3 className="text-xl text-white mb-6 leading-relaxed">{currentQ.question}</h3>
+          <h3 className="text-xl text-white mb-6 leading-relaxed">
+            {currentQ.question.split(/(?<=\.)\s+(?=[A-Z])/).map((sentence, i) => (
+              <span key={i}>
+                {i > 0 && <br />}
+                {sentence}
+              </span>
+            ))}
+          </h3>
           
           {/* Options */}
           <div className="space-y-3">
