@@ -11,25 +11,49 @@ An intelligent, AI-powered interview and practice platform built with Next.js, T
 ## Screenshots
 
 <!-- Add screenshots here -->
-<details>
-<summary>Click to view screenshots</summary>
-
 ### Landing Page
 ![Landing Page](screenshots/landing.png)
 
 ### Interview Mode
-![Practice Mode](screenshots/practice.png)
+Comprehensive environment featuring:
+- **Full Screen Proctoring**: Ensures integrity during the interview.
+![Full Screen Mode](screenshots/fullscreen.png)
+- **Tab Switch Detection**: Monitors focus changes.
+![Tab Switch Detection](screenshots/tab-switch.png)
+- **Auto-timeout**: Maintaining test discipline and pacing.
+![Auto-timeout](screenshots/timeout.png)
+- **Fake Prompt Injection**: 
+![Fake Prompt Injection](screenshots/proctoring.png)
 
-### Theory Question
-![Interview Mode](screenshots/interview.png)
+### Theory Questions
+Interactive theory questions with AI-driven context and intelligent evaluation.
+
+![Theory Question](screenshots/theory.png)
 
 ### MCQ Quiz
+Topic-specific multiple choice quizzes to test foundational knowledge.
+
 ![MCQ Quiz](screenshots/mcq.png)
 
 ### Code Editor
+Full-featured code editor with syntax highlighting and live execution support.
+
 ![Code Editor](screenshots/code-editor.png)
 
-</details>
+### Real-time Score Tracking
+Live updates on your performance as you progress through the interview.
+
+![Real-time Score Tracking](screenshots/score.png)
+
+### System Design Whiteboard
+Interactive whiteboard for system design problems.
+
+![System Design Whiteboard](screenshots/whiteboard.png)
+
+### Match the Following
+Interactive match the following questions.
+
+![Match the Following](screenshots/match-the-following.png)
 
 ## Features
 
@@ -366,8 +390,11 @@ MIT License - see [LICENSE](LICENSE) for details.
 - [Tambo AI](https://tambo.co) for the generative UI platform
 - [Next.js](https://nextjs.org) for the React framework
 - [Tailwind CSS](https://tailwindcss.com) for styling
+
 - [Recharts](https://recharts.org) for data visualization
 
 ---
 
 Built with love using Tambo AI and Next.js
+
+Created by Aman Agrawal and Gouri Agarwal as a group submission for UI Strike Hackathon.
